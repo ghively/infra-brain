@@ -160,7 +160,7 @@ Name your keys accordingly; the key name is what shows up in the audit trail.
 
 ## Connecting from Claude Code
 
-The `infra-brain` MCP server is wired in `C:\path\to\infra-ops\.claude\settings.json`:
+The `infra-brain` MCP server is wired in the infra-ops repo's `.claude/settings.json`:
 
 ```json
 "infra-brain": {
@@ -173,7 +173,7 @@ The `infra-brain` MCP server is wired in `C:\path\to\infra-ops\.claude\settings.
 ```
 
 `INFRA_BRAIN_MCP_KEY` is the raw `ibmcp_…` token from the minting step above, set in
-`C:\path\to\infra-ops\.env` (the variable name is the client's choice — the server
+the infra-ops repo's `.env` (the variable name is the client's choice — the server
 only reads the `Authorization` header). A pre-2026-07-23 hex `INFRA_BRAIN_MCP_TOKEN`
 value will 401 forever: it is not an `ibmcp_` token and hashes to no row in
 `mcp_api_keys`. The tools appear as `mcp__infra-brain__<tool_name>` after restarting

@@ -727,7 +727,7 @@ class DriftDetector(BaseAgent):
         return retired
 
     # Resource types whose DISAPPEARANCE is operationally meaningful. On
-    # 2026-08-11 two real machines (media_host, storage_node) dropped off the fleet
+    # 2026-08-11 two machines (media_host, storage_node) dropped off the fleet
     # and this system produced ZERO signal — no drift event, no alert, only a
     # silent ``retired_at`` stamp that both callers of detect_state_drift()
     # discard. That silence is the over-correction of GitLab #137, which

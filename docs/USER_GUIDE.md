@@ -129,7 +129,7 @@ For local development, put secrets directly in `.env`.
 | `API_TIMEOUT_SECONDS` | `30` | No | Per-request HTTP timeout in seconds |
 | `API_MAX_RETRIES` | `3` | No | Max retry attempts for transient HTTP errors |
 | **MCP Server** | | | |
-| `INFRA_BRAIN_MCP_TOKEN` | `""` | Yes | Bearer token for the MCP server. Generate with `python -c "import secrets; print(secrets.token_hex(32))"`. Must also be set in `C:\path\to\infra-ops\.env` for infra-ops to connect. |
+| `INFRA_BRAIN_MCP_TOKEN` | `""` | Yes | Bearer token for the MCP server. Generate with `python -c "import secrets; print(secrets.token_hex(32))"`. Must also be set in the infra-ops repo's `.env` for infra-ops to connect. |
 | `INFRA_BRAIN_MR_ENABLED` | `false` | No | Set `true` to allow `RemediationAgent` and `InventoryReconcileAgent` to open GitLab MRs. Default `false` — Claude Code / infra-ops opens MRs. |
 | **Security** | | | |
 | `DLP_FAIL_CLOSED` | `true` | No | Block tool output when DLP detects PAN data |

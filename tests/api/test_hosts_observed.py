@@ -1,6 +1,6 @@
 """The Hosts page must not present a machine nothing can see as a current host.
 
-TRK-348. On 2026-08-11 two real hosts (media_host, storage_node) went dark. The
+TRK-348. On 2026-08-11 two hosts (media_host, storage_node) went dark. The
 drift pass retired their linux_host Resources; KG-8 cleared their identity
 legs — and the Hosts page kept listing them as ordinary hosts, with
 ``last_reconciled`` refreshing every 30 minutes, indistinguishable from live
