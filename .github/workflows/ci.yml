@@ -1,0 +1,104 @@
+name: CI
+
+# GitHub Actions translation of the project's original CI gates (formerly
+# GitLab CI against a self-hosted runner — not included in this public copy).
+# Same rigor, same idea: real PostgreSQL in the loop for anything that
+# touches the ORM or raw SQL, not just SQLite.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv sync --extra dev
+      - run: uv run ruff check src/ tests/
+      - run: uv run ruff format --check src/ tests/
+
+  test-sqlite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/ -q
+
+  # Mirrors the project's agent-orm-check gate: the full sqlite suite passing
+  # is not evidence that ORM constructs are dialect-safe. This runs the
+  # curated file list in tests/support/agent_orm_check_paths.txt against a
+  # real Postgres service container via PG_GATE_DSN.
+  agent-orm-check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_USER: infra
+          POSTGRES_PASSWORD: infra
+          POSTGRES_DB: infra_brain_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv sync --extra dev
+      - name: Run the curated ORM/dialect-sensitive test set against real Postgres
+        env:
+          PG_GATE_DSN: postgresql://infra:infra@localhost:5432/infra_brain_ci
+        run: |
+          uv run pytest $(cat tests/support/agent_orm_check_paths.txt) -q
+
+  migration-check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_USER: infra
+          POSTGRES_PASSWORD: infra
+          POSTGRES_DB: infra_brain_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv sync --extra dev
+      - name: alembic upgrade head, then assert no further autogenerate diff
+        env:
+          POSTGRES_URL: postgresql://infra:infra@localhost:5432/infra_brain_ci
+        run: |
+          uv run alembic upgrade head
+          uv run alembic check
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: dashboard-app/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx vitest run
+      - run: npm run build

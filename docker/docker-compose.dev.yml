@@ -1,0 +1,40 @@
+# Development overlay — local-dev conveniences that must NOT run in CI/prod:
+#   * hot-mounts ../src so code edits are live without a rebuild
+#   * publishes internal service ports to the host (postgres/redis/n8n/mcp) so you
+#     can reach them from the Windows host
+# Usage (local dev only):
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up
+#
+# The base docker-compose.yml is deliberately prod-safe: no ../src mount and no
+# host port publishing for internal services (the app talks to them over the
+# compose network). On the shared prod host those host-port binds would collide
+# with other services (e.g. another postgres on 5433). Compose merges volumes/
+# ports lists, so the entries here are additive on top of the base.
+services:
+  postgres:
+    ports:
+      - "5433:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  n8n:
+    ports:
+      - "5679:5678"
+
+  app:
+    volumes:
+      - ../src:/app/src
+
+  scheduler:
+    volumes:
+      - ../src:/app/src
+
+  mcp:
+    volumes:
+      - ../src:/app/src
+    ports:
+      # F-025: keep MCP localhost-only even under the dev overlay — bare "8002:8002"
+      # would default to 0.0.0.0 and re-expose MCP on all interfaces. Intentional.
+      - "127.0.0.1:8002:8002"

@@ -1,0 +1,130 @@
+
+
+
+
+
+
+
+#
+#
+#
+#   * .claude/skills/pg-gate-check/run.sh -> gate 4 of the local replica
+#   * .gitlab-ci.yml            -> the `agent-orm-check:` job (MR-blocking)
+# (FK enforcement, tz-aware datetimes, ON DELETE CASCADE, JSONB, subquery
+# (mocked create_engine, file-backed sqlite the config resolver must reopen by
+# ADMISSION RULE. A file belongs here when it executes ORM queries or writes
+# DSN, deliberate partial-schema fixtures, migration replays) are deliberately
+# Lines starting with # and blank lines are ignored.
+# NOT here — see the "deliberate omissions" note in TRK-3xx.
+# PostgreSQL via tests/support/pg.py::make_engine + PG_GATE_DSN.
+# SINGLE SOURCE OF TRUTH. Two consumers read this file; neither carries its own
+# against real domain tables — i.e. when the dialect can change the answer
+# agent-orm-check (gate 4) — the pytest selection that runs against REAL
+# cardinality, recursive CTEs). Files where an engine is incidental scaffolding
+# copy of the list:
+# path below exists.
+# tests/test_gitlab_ci_structure.py asserts both still read it, and that every
+# ── FastAPI router / dashboard read paths ─────────────────────────────────
+# ── MCP server tool surface (real joins/filters over domain tables) ────────
+# ── chat tools (raw SQL over domain tables) ───────────────────────────────
+# ── knowledge-graph phase 2/3: emitters, resolution, traversal, authority ──
+# ── original TRK-356 set ──────────────────────────────────────────────────
+# ── remaining ORM read/write paths ────────────────────────────────────────
+# ── tools/ writers + model round-trips ────────────────────────────────────
+tests/agents
+tests/api/graphql/test_catalog_queries.py
+tests/api/graphql/test_resource_query.py
+tests/api/test_hosts_observed.py
+tests/api/test_remediation_rollup.py
+tests/api/test_runtime_config_api.py
+tests/api/test_ui_views_ownership.py
+tests/callbacks/test_anomaly.py
+tests/db/test_core_model_extensions.py
+tests/db/test_models.py
+tests/db/test_runtime_config_model.py
+tests/db/test_trk031_models.py
+tests/etl
+tests/test_chat_graph_kg_only.py
+tests/test_chat_host_purpose.py
+tests/test_chat_tools_json.py
+tests/test_collection_disabled_domains.py
+tests/test_collection_health.py
+tests/test_compliance_linkage.py
+tests/test_contract_map.py
+tests/test_create_admin.py
+tests/test_custom_views_crud.py
+tests/test_dashboard_api.py
+tests/test_dashboard_auth.py
+tests/test_dashboard_cloudnet.py
+tests/test_dashboard_documents.py
+tests/test_dashboard_fleet_software_cve.py
+tests/test_dashboard_host_posture.py
+tests/test_dashboard_iac_deep.py
+tests/test_dashboard_netdiscovery.py
+tests/test_dashboard_os_internals.py
+tests/test_dashboard_rapid7_secondary.py
+tests/test_dashboard_state_backend.py
+tests/test_dashboard_sweeps.py
+tests/test_dashboard_vsphere_secondary.py
+tests/test_digest.py
+tests/test_drift_trend.py
+tests/test_graph_api_kg_store.py
+tests/test_graph_edge_authority.py
+tests/test_graph_engine.py
+tests/test_graph_engine_child_rows.py
+tests/test_graph_engine_junction.py
+tests/test_graph_phase2_emitters.py
+tests/test_graph_phase2_schema.py
+tests/test_graph_phase3_ambiguity_counter_evidence.py
+tests/test_graph_phase3_resolution.py
+tests/test_graph_phase3_traversal.py
+tests/test_graph_role_tagging.py
+tests/test_host_purpose_map_api.py
+tests/test_instinct_governance.py
+tests/test_internal_state.py
+tests/test_learning_feedback.py
+tests/test_linux_detail.py
+tests/test_mcp_api_key_model.py
+tests/test_mcp_auth_helpers.py
+tests/test_mcp_auth_middleware.py
+tests/test_mcp_batch_closure.py
+tests/test_mcp_batch_f.py
+tests/test_mcp_batch_g.py
+tests/test_mcp_batch_h.py
+tests/test_mcp_batch_i.py
+tests/test_mcp_batch_j.py
+tests/test_mcp_batch_k.py
+tests/test_mcp_batch_m.py
+tests/test_mcp_batch_n.py
+tests/test_mcp_bulk_analyze.py
+tests/test_mcp_bulk_proposals.py
+tests/test_mcp_bulk_rootcause_notes.py
+tests/test_mcp_get_manual_writes.py
+tests/test_mcp_graph_phase3.py
+tests/test_mcp_keys_api.py
+tests/test_mcp_manual_writes.py
+tests/test_mcp_server.py
+tests/test_mcp_server_batch_a.py
+tests/test_mcp_server_fixes.py
+tests/test_mcp_server_roster.py
+tests/test_mcp_utilization_forecast.py
+tests/test_mint_headless_runner_key.py
+tests/test_multi_collector_convergence.py
+tests/test_ops_alert_receiver.py
+tests/test_p5_issameas_resolver_coverage.py
+tests/test_public_share_view.py
+tests/test_rag_hybrid_pg.py
+tests/test_remediation_graph.py
+tests/test_scripts_store.py
+tests/test_supervisor_runtime_toggles.py
+tests/test_upsert_resource.py
+tests/test_webhook_subscriptions_api.py
+tests/test_webhooks.py
+tests/test_windows_patch.py
+tests/test_zone_roundtrip.py
+tests/tools/test_agent_task_runs.py
+tests/tools/test_client_state.py
+tests/tools/test_documents.py
+tests/tools/test_environment_notes.py
+tests/tools/test_governance_events.py
+tests/tools/test_webhook_publish.py

@@ -1,0 +1,66 @@
+# Agent execution dependency map — read by the orchestrator for dependency-aware
+# sweep sequencing. Before triggering a downstream agent, the orchestrator checks
+# whether its upstream agents have run recently enough to provide valid input data.
+#
+# Format per entry:
+#   requires: [domain_keys]   — upstream agents whose fresh data is needed
+#   reason: "why"             — shown in orchestrator staleness warnings
+#   stale_window_hours: N     — max age before upstream is considered stale
+#
+# RETIRED / DISABLED UPSTREAMS ARE NOT LISTED. A `requires` entry naming a
+# collector that never runs is a permanent staleness warning nobody can clear,
+# which trains the reader to ignore all of them. Removed 2026-08-12:
+#   cloud, identity, k8s, octopus, vsphere, vuln  — AgentSpec.retired=True
+#     (enterprise remnants; see each agent's spec comment)
+#   windows                                       — retired, TRK-278/GitLab #140
+#   net                                           — dispatchable=False (POC;
+#     netdiscovery covers network-device inventory)
+# If one is revived (COLLECTION_REVIVED_DOMAINS), re-add it to the dependent
+# entries below.
+
+dependencies:
+
+  drift:
+    requires: [linux, iac, cicd, eol]
+    reason: "Drift detection compares current snapshots against previous — needs fresh collection data from all monitored domains"
+    stale_window_hours: 8
+
+  fleet_health:
+    requires: [linux]
+    reason: "Fleet health reporter aggregates cross-domain status from compute and network collection agents"
+    stale_window_hours: 8
+
+  drift_learning:
+    requires: [drift, discovery]
+    reason: "Drift learning builds patterns from drift history and the discovery topology baseline"
+    stale_window_hours: 48
+
+  inventory_reconcile:
+    requires: [iac]
+    reason: "Inventory reconciliation compares GitLab source-of-truth against current collected state (its cloud/k8s/vsphere legs are retired here)"
+    stale_window_hours: 26
+
+  vuln_triage:
+    requires: [eol]
+    reason: "Vulnerability triage prioritizes CVEs using EOL status plus whatever is in vuln_queue (the Rapid7 `vuln` feed is retired; the queue is still writable via the seed_vulnerability MCP tool)"
+    stale_window_hours: 26
+
+  rootcause:
+    requires: [drift]
+    reason: "Root-cause correlation requires open drift events to analyze — needs a recent drift run"
+    stale_window_hours: 26
+
+  remediation:
+    requires: [vuln_triage, drift]
+    reason: "Remediation proposes and executes approved fixes based on triage output and current drift state"
+    stale_window_hours: 26
+
+  compliance:
+    requires: [linux]
+    reason: "Policy-as-code evaluation needs current configuration state from collection agents"
+    stale_window_hours: 26
+
+  learning_feedback:
+    requires: [drift_learning, inventory_reconcile]
+    reason: "Outcome feedback loop requires drift-learning patterns and reconciled inventory as inputs"
+    stale_window_hours: 168

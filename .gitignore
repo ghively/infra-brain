@@ -1,0 +1,41 @@
+.env
+# Any .env SIDECAR — backups, timestamped copies, per-env variants. `.env`
+# above is an exact-match pattern, so a file like
+# `.env.pre-rotate-YYYYMMDD_HHMMSS` (exactly what a credential
+# rotation left behind once) was NOT ignored: a full copy of every
+# live secret, untracked in the repo, one `git add -A` away from being
+# committed. The negation keeps the tracked template visible.
+.env.*
+!.env.example
+# Host-only collector credentials; only the .example template is tracked.
+collector-secrets.env
+**/collector-secrets.env
+*.pyc
+__pycache__/
+.venv/
+dist/
+*.egg-info/
+.ruff_cache/
+
+# build artifacts / imports
+*.zip
+knowledge/
+.superpowers/
+*.bak.*
+interactive_demo.html
+scripts/design_sync/.staging/
+
+# node / vite dashboard rebuild
+dashboard-app/node_modules/
+.worktrees-parallel/
+# Dashboard build output — not committed in this copy; `npm run build` in
+# dashboard-app/ regenerates it.
+src/infra_brain/dashboard/static2/
+
+# design-sync build artifacts (regenerated, never committed)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+.pytest_cache/

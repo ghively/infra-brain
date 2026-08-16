@@ -1,0 +1,102 @@
+eol_check:
+  enabled: true
+vuln_sla_days: 30
+stale_drift_days: 14
+unaddressed_critical_cve_days: 30
+
+# Policy-as-code rule engine (GitLab #118). Each entry is one declarative
+# compliance rule, evaluated by infra_brain.agents.compliance_rules.evaluate_rules
+# against one of 4 generic shapes:
+#   field_overdue     — a date field on a row has passed "now"
+#   sla_breach        — a date field has passed, scoped to an in-flight status
+#   staleness         — a status="open" row unresolved past a day threshold
+#   unaddressed_action — a threshold criterion with no qualifying ProposedAction
+#
+# Adding a 5th rule that fits one of these shapes is a YAML edit only — no
+# code change, no PR. These 4 entries reproduce the original 4 hardcoded
+# Python rule blocks exactly (see agents/compliance_rules.py's DEFAULT_RULES,
+# used as a fallback when this key is absent, and
+# tests/agents/test_compliance_rule_engine.py for the equivalence proof).
+rules:
+  - name: eol_overdue
+    type: field_overdue
+    enabled_key: eol_check.enabled
+    model: EolRegistry
+    date_field: eol_date
+    resource_fk: resource_id
+    host_field: asset_name
+    severity: high
+    detail_template: "{asset_name} reached EOL on {eol_date_date}"
+
+  - name: vuln_sla_breach
+    type: sla_breach
+    model: VulnQueueItem
+    date_field: sla_due
+    resource_fk: resource_id
+    status_field: status
+    status_in: [open, triage]
+    severity_field: severity
+    critical_severity: critical
+    default_severity: high
+    host_fallback_literal: unknown
+    detail_template: "{cve_id} past SLA ({severity})"
+
+  - name: stale_drift
+    type: staleness
+    model: DriftEvent
+    date_field: detected_at
+    resource_fk: resource_id
+    status_field: status
+    status_value: open
+    days_threshold_key: stale_drift_days
+    default_days: 14
+    # GitLab #137: synthetic/self-telemetry domains never flagged as stale drift.
+    # homelab_services: home-lab media-server reachability blips must never
+    # read as a compliance/PCI signal (verified live conflation risk, not
+    # theoretical — see compliance_rules.DEFAULT_RULES's stale_drift entry
+    # and tests/agents/test_compliance_rule_engine.py).
+    # fleet_health: GitLab #142, mirrors remediation.py's _BOOKKEEPING_DOMAINS
+    # — its entire snapshot IS collector telemetry, not fleet infrastructure.
+    exclude_resource_domains:
+      [compliance, graph_maintenance, homelab_services, fleet_health]
+    # GitLab #162: live vSphere telemetry fields (and scanner-derived metrics)
+    # change every collection cycle by design and will therefore never
+    # naturally resolve — this list MUST stay identical to
+    # compliance_rules.DEFAULT_RULES's stale_drift entry (both derive from
+    # infra_brain.drift_taxonomy; see
+    # tests/agents/test_compliance_rule_engine.py's lockstep test).
+    exclude_fields:
+      [
+        cpu_usage_mhz,
+        esxi_host,
+        memory_usage_mb,
+        overall_status,
+        risk_score,
+        uptime_seconds,
+        vulnerabilities,
+      ]
+    # GitLab #142/#162: belt-and-braces field-prefix exclusion — mirrors
+    # remediation.py's is_telemetry_field() prefix check so fleet_health's
+    # own domain_freshness.* collector-heartbeat counters are skipped by
+    # field name too, not just by the domain exclusion above. MUST stay
+    # identical to compliance_rules.DEFAULT_RULES's stale_drift entry (see
+    # tests/agents/test_compliance_rule_engine.py's lockstep test).
+    exclude_field_prefixes: [domain_freshness]
+    severity: medium
+    detail_template: "{field} drift open >{days_threshold}d"
+
+  - name: unaddressed_critical_cve
+    type: unaddressed_action
+    model: R7Asset
+    criterion_field: vuln_critical
+    criterion_op: gt
+    criterion_value: 0
+    resource_fk: resource_id
+    hostname_field: hostname
+    action_type: vuln_patch
+    days_threshold_key: unaddressed_critical_cve_days
+    default_days: 30
+    severity: critical
+    detail_template: >-
+      CRITICAL vuln band with no ProposedAction in {days_threshold}d
+      (vuln_critical={vuln_critical})

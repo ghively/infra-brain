@@ -1,0 +1,10 @@
+repos:
+  # Wave 6.1 B7: design-sync-build hook removed — the DC-framework source tree
+  # (dashboard/src/*.dc.html) and build pipeline (scripts/design_sync/build.py)
+  # were deleted when the legacy /dashboard dashboard was retired (DR-6.1).
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.10
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format

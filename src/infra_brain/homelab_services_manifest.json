@@ -1,0 +1,34 @@
+{
+  "$comment": "SAMPLE manifest — the real file in this repo's origin deployment is real infrastructure data (host names, internal URLs) and was intentionally not published. This is a synthetic example showing the schema HomelabServicesAgent expects: name, host, url, category, source, and an optional note. url:null entries are honestly-flagged gaps (no confirmed working URL) — the collector skips entries missing a name or url rather than guessing. Point `homelab_services_manifest_path` at your own manifest in this shape.",
+  "version": 1,
+  "generated_date": "2026-01-01",
+  "methodology": [
+    "Example only. In a real deployment this section documents how the manifest was built — e.g. cross-referencing IaC inventory files against a wiki or a live discovery pass — so a reader can judge how trustworthy each entry is."
+  ],
+  "services": [
+    {
+      "name": "example-monitoring",
+      "host": "host-a",
+      "url": "http://198.51.100.10:9090",
+      "category": "observability-monitoring",
+      "source": "example",
+      "note": "Sample entry — replace with your own service inventory."
+    },
+    {
+      "name": "example-dashboard",
+      "host": "host-a",
+      "url": "http://198.51.100.10:3000",
+      "category": "observability-visualization",
+      "source": "example",
+      "note": "Sample entry — replace with your own service inventory."
+    },
+    {
+      "name": "example-unconfirmed-service",
+      "host": "host-b",
+      "url": null,
+      "category": "other",
+      "source": "example",
+      "note": "Sample of an honestly-flagged gap: no confirmed URL, so the collector skips it rather than guessing."
+    }
+  ]
+}

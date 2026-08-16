@@ -1,0 +1,29 @@
+/* Page-local styles for the consolidated Hosts page (Phase 2).
+ *
+ * Deliberately a separate stylesheet rather than additions to
+ * `components/ui/ui.css`: these rules are Hosts-page layout, not design-system
+ * primitives, and keeping them out of the shared file avoids collisions with the
+ * other Phase 2 page rebuilds landing in parallel. Colors come from the `--ib-*`
+ * / bare-alias custom properties defined in `index.css` — no literals here
+ * (DESIGN.md §1). */
+
+/* Vertical rhythm between the stacked Panels inside a detail drawer. */
+.ib-hosts-drawer-panel {
+  margin-bottom: 16px;
+}
+
+/* Toolbar row: search input + filter chip groups, wrapping on narrow widths. */
+.ib-hosts-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+/* Divider between adjacent chip groups in the filter row. */
+.ib-hosts-filter-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+}

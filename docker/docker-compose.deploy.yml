@@ -1,0 +1,51 @@
+# Deploy overlay (the CI-deployed stack on deploy-host-01 — the dev deployment;
+# there is no production environment yet) — pins the MCP container's .env to a
+# stable host path.
+# Usage: docker compose -f docker/docker-compose.yml -f docker/docker-compose.deploy.yml
+#
+# The base file is deploy-safe (no ../src hot-mount — that lives in
+# docker-compose.dev.yml, which CI/the deployed stack never load), so the image's baked-in
+# /app/src is always used here. This overlay only remaps the MCP container's .env
+# bind from the ephemeral CI workspace (../.env) to the persisted /opt/infra-brain/.env
+# so it survives after the CI workspace is cleaned up. (Compose merges volume lists
+# by container target, so /app/infra-brain.env below replaces the base mapping.)
+#
+# ── Ansible inventory mounts (added 2026-08-10 — see TRK-328) ────────────────
+# These two bind mounts previously existed ONLY in docker-compose.homelab.yml,
+# which CI never loads. On 2026-08-02 ~19:55 UTC the stack was recreated by a
+# manual `docker compose up -d` that omitted that overlay, silently dropping
+# both mounts. `ANSIBLE_INVENTORY_PATH=/opt/inventory` stayed set in .env, so
+# every `linux` collection run since failed at the existence check — 8 days of
+# total blindness across all 7 hosts, including permanent loss of any port
+# drift that occurred and reverted inside the window.
+#
+# The CI deploy job then made the omission STRUCTURAL: it loads only
+# docker-compose.yml + this file, so every deploy re-created the stack without
+# them. Declaring them here is what actually fixes it — restoring the mount by
+# hand would be undone by the next pipeline.
+#
+# Both are parameterized with a default (the SSH_KEY_PATH precedent above)
+# rather than hardcoded, so a different deploy host can override them without
+# editing this file. NOTE the second mount is the SAME key as SSH_KEY_PATH but
+# at a second path: this fleet's inventory group_vars/all.yml pins
+# `ansible_ssh_private_key_file: ~/.ssh/ansible_deploy`, and `~` resolves to the
+# container user's home (/home/appuser), not /app. Restoring only the inventory
+# would fail at the next step with ansible "no such identity".
+services:
+  app:
+    volumes:
+      - ${SSH_KEY_PATH:-/dev/null}:/app/.ssh/id_ed25519:ro
+      - /opt/infra-brain/repos:/opt/infra-brain/repos:ro
+      - ${ANSIBLE_INVENTORY_HOST_PATH:-/home/operator/homelab-ansible/inventory}:/opt/inventory:ro
+      - ${ANSIBLE_DEPLOY_KEY_HOST_PATH:-/home/operator/.ssh/ansible_deploy}:/home/appuser/.ssh/ansible_deploy:ro
+
+  scheduler:
+    volumes:
+      - ${SSH_KEY_PATH:-/dev/null}:/app/.ssh/id_ed25519:ro
+      - /opt/infra-brain/repos:/opt/infra-brain/repos:ro
+      - ${ANSIBLE_INVENTORY_HOST_PATH:-/home/operator/homelab-ansible/inventory}:/opt/inventory:ro
+      - ${ANSIBLE_DEPLOY_KEY_HOST_PATH:-/home/operator/.ssh/ansible_deploy}:/home/appuser/.ssh/ansible_deploy:ro
+
+  mcp:
+    volumes:
+      - /opt/infra-brain/.env:/app/infra-brain.env:ro

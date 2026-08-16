@@ -1,0 +1,53 @@
+# Home-lab overlay for docker/docker-compose.yml.
+#
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.homelab.yml up --build
+#
+# What it changes vs the base stack:
+#   * n8n and deadman-prober move behind a profile, so they don't start.
+#     Both are production ops plumbing; neither is needed to run infra-brain.
+#   * Session cookies stop requiring HTTPS (the lab stack is plain http://).
+#   * Postgres and Redis publish on the LAN-safe loopback ports the base file
+#     already uses, so `psql -h 127.0.0.1 -p 15432` works from the host.
+#
+# It deliberately does NOT relax auth. Set INFRA_BRAIN_DEV=1 in .env if you
+# want the open dev path while you're getting started.
+
+services:
+  # Workflow automation — not required by infra-brain itself.
+  n8n:
+    profiles: ["optional"]
+
+  # Three-layer heartbeat monitor for unattended production. Overkill at home.
+  deadman-prober:
+    profiles: ["optional"]
+
+  app:
+    environment:
+      # The base file defaults this to true. A Secure cookie is dropped by the
+      # browser over plain http://, so dashboard login silently fails to persist
+      # until this is false. Flip it back the day you put a TLS proxy in front.
+      COOKIE_SECURE: "false"
+    volumes:
+      # Your own Ansible inventory — read-only, matches
+      # ANSIBLE_INVENTORY_PATH=/opt/inventory in .env. See README.md for setup.
+      - /home/operator/homelab-ansible/inventory:/opt/inventory:ro
+      # This inventory's group_vars/all.yml pins
+      # ansible_ssh_private_key_file: ~/.ssh/ansible_deploy — a filename/path
+      # convention distinct from the generic SSH_KEY_PATH mount above
+      # (`/app/.ssh/id_ed25519`), and `~` resolves to the real container user's
+      # home (/home/appuser), not /app. Without this second mount of the SAME
+      # key at the path the inventory actually names, ansible aborts with
+      # "no such identity" against every host except one that happens not to
+      # need it — found by running the first real sweep against this fleet.
+      - /home/operator/.ssh/ansible_deploy:/home/appuser/.ssh/ansible_deploy:ro
+
+  scheduler:
+    volumes:
+      - /home/operator/homelab-ansible/inventory:/opt/inventory:ro
+      - /home/operator/.ssh/ansible_deploy:/home/appuser/.ssh/ansible_deploy:ro
+
+  # seed_db.py can optionally read INFRA_OPS_ROOT to seed a human instinct
+  # ledger from an external knowledge tree — that plugin content isn't part
+  # of this repo, so the mount is omitted here. seed_db.py runs fine without
+  # it; it just seeds scan points only. Point INFRA_OPS_ROOT at your own
+  # knowledge tree and add a matching volume mount if you build one out.

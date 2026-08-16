@@ -1,0 +1,45 @@
+# k8s/migration-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: infra-brain-migrate-
+  namespace: infra-brain
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: bws-bootstrap
+          image: ${CI_REGISTRY_IMAGE:-infra-brain}:${IMAGE_TAG:-latest}
+          command: ["/bin/bash", "scripts/bws_bootstrap.sh"]
+          env:
+            - name: BWS_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bws-access-token
+                  key: BWS_ACCESS_TOKEN
+            - name: SECRETS_OUT
+              value: /run/secrets/env
+          volumeMounts:
+            - name: secrets-vol
+              mountPath: /run/secrets
+      containers:
+        - name: migrate
+          image: ${CI_REGISTRY_IMAGE:-infra-brain}:${IMAGE_TAG:-latest}
+          command: ["/bin/bash", "-c", "source /run/secrets/env && alembic upgrade head && python scripts/seed_db.py"]
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          envFrom:
+            - configMapRef:
+                name: infra-brain-config
+          volumeMounts:
+            - name: secrets-vol
+              mountPath: /run/secrets
+      volumes:
+        - name: secrets-vol
+          emptyDir: {}
+      restartPolicy: Never

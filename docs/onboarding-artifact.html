@@ -1,0 +1,486 @@
+<title>Infra Brain — Team Onboarding</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c232d; --line:#2a323d;
+    --ink:#e6edf3; --muted:#9aa7b4; --faint:#6e7b8a;
+    --safe:#3fb950; --safe-bg:#0f2a17; --accent:#58a6ff; --accent-bg:#0d2233;
+    --warn:#d29922; --warn-bg:#2a210a; --write:#bc8cff; --write-bg:#21163a;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0}
+  .wrap{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .container{max-width:1080px;margin:0 auto;padding:0 20px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86em;
+    background:#0b0f14;border:1px solid var(--line);border-radius:6px;padding:.08em .4em;color:#cdd9e5}
+
+  nav{position:sticky;top:0;z-index:20;background:rgba(14,17,22,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  nav .container{display:flex;gap:4px;flex-wrap:wrap;align-items:center;padding-top:10px;padding-bottom:10px}
+  nav .brand{font-weight:700;margin-right:auto;letter-spacing:.2px}
+  nav .brand .dot{color:var(--safe)}
+  nav a{color:var(--muted);font-size:.82rem;padding:5px 8px;border-radius:8px;white-space:nowrap}
+  nav a:hover{color:var(--ink);background:var(--panel2);text-decoration:none}
+
+  .hero{padding:60px 0 30px;border-bottom:1px solid var(--line);
+    background:radial-gradient(1100px 380px at 20% -10%,#13233a 0%,transparent 60%)}
+  .eyebrow{color:var(--safe);font-weight:700;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase}
+  h1{font-size:2.5rem;line-height:1.1;margin:.3em 0 .25em;letter-spacing:-.02em}
+  .lede{font-size:1.18rem;color:var(--muted);max-width:760px}
+  .lede b{color:var(--ink)}
+  .trustbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+  .chip{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;font-weight:600;
+    padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel)}
+  .chip.safe{color:var(--safe);border-color:#1d4427;background:var(--safe-bg)}
+  .chip.write{color:var(--write);border-color:#3a2a5e;background:var(--write-bg)}
+
+  section{padding:44px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:1.5rem;margin:0 0 6px;letter-spacing:-.01em}
+  h2 .num{color:var(--faint);font-weight:600;margin-right:10px;font-size:1.1rem}
+  .sub{color:var(--muted);margin:0 0 22px;max-width:780px}
+  h3{font-size:1.06rem;margin:0 0 6px}
+
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:820px){.g2,.g3{grid-template-columns:1fr}}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .card h3{display:flex;align-items:center;gap:9px}
+  .tag{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 7px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
+  .tag.llm{color:var(--accent);border-color:#1c3a5c;background:var(--accent-bg)}
+  .tag.det{color:var(--safe);border-color:#1d4427;background:var(--safe-bg)}
+  .tag.opt{color:var(--warn);border-color:#43360f;background:var(--warn-bg)}
+  .tag.soon{color:var(--write);border-color:#3a2a5e;background:var(--write-bg)}
+  .muted{color:var(--muted)} .small{font-size:.9rem}
+
+  .diagram{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;overflow-x:auto}
+  .diagram h4.dh{margin:0 0 14px;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+  .lane{display:flex;gap:14px;align-items:stretch;min-width:640px}
+  .lane .col{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .lane .col h4{margin:0 0 8px;font-size:.95rem}
+  .pill{display:block;background:#0b0f14;border:1px solid var(--line);border-radius:8px;
+    padding:7px 10px;margin:6px 0;font-size:.84rem}
+  .arrowrow{display:flex;align-items:center;justify-content:center;color:var(--faint);
+    font-size:1.4rem;padding:6px 0}
+
+  /* horizontal pipeline */
+  .pipe{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+  .node{background:#0b0f14;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:.85rem}
+  .node.t{border-color:#1c3a5c;color:var(--accent)} .node.r{border-color:#1d4427;color:var(--safe)}
+  .node.g{border-color:#3a2a5e;color:var(--write)}
+  .ar{color:var(--faint);font-size:1.2rem}
+  .note{font-size:.82rem;color:var(--faint);margin-top:12px}
+
+  .flow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 4px}
+  .step{background:#0b0f14;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:.82rem}
+  .step.trigger{border-color:#1c3a5c;color:var(--accent)}
+  .step.result{border-color:#1d4427;color:var(--safe)}
+  .arr{color:var(--faint)}
+
+  .gr{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-top:1px solid var(--line)}
+  .gr:first-child{border-top:none}
+  .gr .ic{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
+    background:var(--safe-bg);border:1px solid #1d4427;color:var(--safe);font-size:.95rem}
+  .gr.w .ic{background:var(--warn-bg);border-color:#43360f;color:var(--warn)}
+
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius)}
+  table{border-collapse:collapse;width:100%;min-width:660px;font-size:.9rem}
+  th,td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--panel2);color:var(--muted);font-weight:600;font-size:.8rem;
+    text-transform:uppercase;letter-spacing:.04em}
+  tr:last-child td{border-bottom:none}
+  td b{color:var(--ink)}
+
+  .callout{border-radius:var(--radius);padding:16px 18px;border:1px solid;margin-top:16px}
+  .callout.warn{background:var(--warn-bg);border-color:#43360f}
+  .callout.warn b{color:var(--warn)}
+  .callout.safe{background:var(--safe-bg);border-color:#1d4427}
+  .callout.safe b{color:var(--safe)}
+  .callout.soon{background:var(--write-bg);border-color:#3a2a5e}
+  .callout.soon b{color:var(--write)}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:820px){.stats{grid-template-columns:1fr}}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .stat .big{font-size:1.5rem;font-weight:700;color:var(--accent)}
+  .stat .lbl{font-size:.84rem;color:var(--muted);margin-top:2px}
+
+  .lane-head{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  .lane-head .badge{font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:999px;
+    border:1px solid var(--line);background:var(--panel2);color:var(--muted)}
+  ul.tight{margin:8px 0 0;padding-left:18px} ul.tight li{margin:5px 0;font-size:.92rem}
+  ol.tight{margin:8px 0 0;padding-left:20px} ol.tight li{margin:6px 0;font-size:.92rem}
+  .ptr{font-size:.84rem;color:var(--faint);margin-top:10px}
+
+  .gloss{columns:2;column-gap:24px} @media(max-width:680px){.gloss{columns:1}}
+  .gloss div{break-inside:avoid;margin-bottom:12px}
+  .gloss dt{font-weight:600} .gloss dd{margin:0;color:var(--muted);font-size:.9rem}
+
+  footer{padding:34px 0;color:var(--faint);font-size:.86rem}
+  .kbd{font-family:ui-monospace,monospace;font-size:.82em;background:#0b0f14;border:1px solid var(--line);
+    border-radius:6px;padding:.1em .45em}
+  pre{background:#0b0f14;border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;
+    font-size:.84rem;color:#cdd9e5;margin:10px 0 0}
+</style>
+
+<div class="wrap">
+
+<nav><div class="container">
+  <span class="brand">🧠 Infra Brain<span class="dot"> · </span><span class="muted" style="font-weight:500">Onboarding</span></span>
+  <a href="#model">Model</a>
+  <a href="#arch">Architecture</a>
+  <a href="#workflows">Workflows</a>
+  <a href="#use">Use it</a>
+  <a href="#guardrails">Guardrails</a>
+  <a href="#trust">Accuracy</a>
+  <a href="#perf">Performance</a>
+  <a href="#results">Results</a>
+  <a href="#roles">Roles</a>
+  <a href="#glossary">Glossary</a>
+</div></nav>
+
+<header class="hero"><div class="container">
+  <div class="eyebrow">Team onboarding · living document</div>
+  <h1>The read-only brain for your infrastructure</h1>
+  <p class="lede">Infra Brain continuously <b>inventories, documents, and detects drift</b> across your estate — and when something's wrong it <b>proposes</b> a fix. It never changes infrastructure itself. Think of it as a tireless auditor that keeps your CMDB and runbooks true to reality.</p>
+  <div class="trustbar">
+    <span class="chip safe">● Read-only on all infrastructure</span>
+    <span class="chip write">✎ Only 4 write paths: its DB · GitLab MR · Jira · Confluence</span>
+    <span class="chip">⛨ Propose, never dispose</span>
+  </div>
+</div></header>
+
+<!-- 01 MENTAL MODEL -->
+<section id="model"><div class="container">
+  <h2><span class="num">01</span>The mental model</h2>
+  <p class="sub">One idea unlocks everything else: Infra Brain is a <b>hybrid</b>. Fast deterministic collectors do the routine read-only gathering; an LLM reasoning layer handles the judgement work — and <b>every</b> tool the LLM touches is forced through the same read-only safety checks.</p>
+  <div class="diagram">
+    <div class="lane">
+      <div class="col">
+        <h4><span class="tag det">Deterministic</span></h4>
+        <span class="pill">Per-domain collectors</span>
+        <span class="pill">Hardcoded read-only GETs</span>
+        <span class="pill">Fast · cheap · predictable</span>
+        <span class="pill muted">linux · windows · cicd · octopus · vsphere · k8s · cloud · rapid7 · iac · eol …</span>
+      </div>
+      <div class="col" style="flex:.4;align-items:center;display:flex;flex-direction:column;justify-content:center">
+        <h4 class="muted" style="text-align:center">Supervisor<br>+ Scheduler</h4>
+        <div class="arrowrow">→</div>
+        <span class="pill" style="text-align:center">Postgres<br><span class="muted small">system of record</span></span>
+      </div>
+      <div class="col">
+        <h4><span class="tag llm">LLM reasoning</span></h4>
+        <span class="pill">Autonomous discovery</span>
+        <span class="pill">Drift narratives &amp; MR authoring</span>
+        <span class="pill">Read-only tools via enforced callbacks</span>
+        <span class="pill muted">discovery · drift_learning · NL-to-SQL chat</span>
+      </div>
+    </div>
+    <div class="arrowrow" style="justify-content:flex-start;padding-left:6px">↻ self-improvement loop feeds learnings back into future runs</div>
+  </div>
+</div></section>
+
+<!-- 02 ARCHITECTURE -->
+<section id="arch"><div class="container">
+  <h2><span class="num">02</span>Architecture, in three diagrams</h2>
+  <p class="sub">If you remember three pictures, remember these: how a sweep flows, how the LLM is kept on a leash, and the complete map of what can write where.</p>
+
+  <div class="grid" style="gap:18px">
+    <div class="diagram">
+      <h4 class="dh">A · Collection &amp; drift pipeline (the heartbeat)</h4>
+      <div class="pipe">
+        <span class="node t">Scheduler / webhook / <code>POST /sweeps/{domain}</code></span><span class="ar">→</span>
+        <span class="node">Supervisor routes to the domain agent</span><span class="ar">→</span>
+        <span class="node">Agent <code>collect()</code> — read-only</span><span class="ar">→</span>
+        <span class="node">Upsert <code>resources</code> + write <code>snapshots</code></span>
+      </div>
+      <div class="pipe" style="margin-top:8px">
+        <span class="ar">↳</span><span class="node">Post-hook: <code>DriftDetector</code> diffs vs last snapshot</span><span class="ar">→</span>
+        <span class="node r">drift? → Jira ticket + Confluence page + GitLab MR</span>
+      </div>
+      <p class="note">Redis token-locks each domain so two sweeps can't overlap. Every tool call is recorded to <code>agent_action_log</code>.</p>
+    </div>
+
+    <div class="diagram">
+      <h4 class="dh">B · The enforced LLM tool path (why the AI can't go rogue)</h4>
+      <div class="pipe">
+        <span class="node">LLM agent <code>reason()</code></span><span class="ar">→</span>
+        <span class="node">bind read-only tools</span><span class="ar">→</span>
+        <span class="node t">invoke <i>with</i> callback chain</span><span class="ar">→</span>
+        <span class="node" style="border-color:#1d4427">ReadOnlyToolValidator · DLP · Audit</span><span class="ar">→</span>
+        <span class="node r">tool runs · result fed back</span>
+      </div>
+      <p class="note">The callback chain rides on <b>every</b> invoke (<code>config={"callbacks": …}</code>). A blocked call raises <code>PermissionError</code>, which is handed back to the model as a tool message — it learns it can't, instead of crashing. Decisions are logged to <code>agent_decision_log</code>.</p>
+    </div>
+
+    <div class="diagram">
+      <h4 class="dh">C · The complete write map (everything else is read-only)</h4>
+      <div class="pipe" style="justify-content:center">
+        <span class="node">Infra Brain</span>
+        <span class="ar">→</span>
+        <span class="node g">① Postgres (own DB)</span>
+        <span class="node g">② GitLab MR</span>
+        <span class="node g">③ Jira</span>
+        <span class="node g">④ Confluence</span>
+      </div>
+      <p class="note">Those four arrows are the <b>only</b> places code mutates anything. All infrastructure systems (vSphere, GitLab repos, Octopus, Rapid7, cloud, k8s, hosts) are reached with GETs exclusively. <span class="tag soon">planned</span> a memory/retrieval layer will sit beside Postgres — see <a href="#trust">Accuracy</a>.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 03 WORKFLOWS -->
+<section id="workflows"><div class="container">
+  <h2><span class="num">03</span>The six workflows</h2>
+  <p class="sub">Almost everything Infra Brain does is one of these. Each is <span class="step trigger">triggered</span>, runs a few steps, and produces a concrete <span class="step result">result</span>.</p>
+  <div class="grid g2">
+    <div class="card">
+      <h3>Collection sweep <span class="tag det">deterministic</span></h3>
+      <p class="small muted">The heartbeat. Keeps the inventory current.</p>
+      <div class="flow"><span class="step trigger">schedule / POST /sweeps/{domain}</span><span class="arr">→</span><span class="step">collect (read-only)</span><span class="arr">→</span><span class="step">upsert + snapshot</span><span class="arr">→</span><span class="step result">drift check</span></div>
+      <p class="small muted">Cadence: most domains every 6h; cloud/cicd/octopus/vuln/eol daily.</p>
+    </div>
+    <div class="card">
+      <h3>Drift → propose, never dispose <span class="tag det">core</span></h3>
+      <p class="small muted">Reality diverged from the record — so it raises it, never silently fixes it.</p>
+      <div class="flow"><span class="step trigger">snapshot differs</span><span class="arr">→</span><span class="step">DriftDetector (DeepDiff)</span><span class="arr">→</span><span class="step">Jira + Confluence</span><span class="arr">→</span><span class="step result">GitLab MR (human merges)</span></div>
+      <p class="small muted">Inventory fixes go out as a branch + commit + MR — a person approves the merge.</p>
+    </div>
+    <div class="card">
+      <h3>Autonomous discovery <span class="tag llm">LLM</span></h3>
+      <p class="small muted">"Spread out and find what we don't yet track."</p>
+      <div class="flow"><span class="step trigger">weekly (Sun)</span><span class="arr">→</span><span class="step">reason over read-only tools</span><span class="arr">→</span><span class="step result">findings / proposals</span></div>
+      <p class="small muted">Cross-references sources (e.g. host in Ansible but not the DB). No write tools in its kit.</p>
+    </div>
+    <div class="card">
+      <h3>Self-improvement loop <span class="tag llm">LLM</span></h3>
+      <p class="small muted">It gets better at watching the things that actually move.</p>
+      <div class="flow"><span class="step trigger">weekly</span><span class="arr">→</span><span class="step">DriftLearning → Instincts</span><span class="arr">→</span><span class="step">read back into prompts</span><span class="arr">→</span><span class="step result">smarter runs</span></div>
+      <p class="small muted">Generated scripts saved to DB + Git (deduped, reusable, never deleted). Actions <i>and</i> decisions logged.</p>
+    </div>
+    <div class="card">
+      <h3>Ask it questions <span class="tag llm">LLM</span></h3>
+      <p class="small muted">Natural-language Q&amp;A over the live inventory.</p>
+      <div class="flow"><span class="step trigger">UI chat</span><span class="arr">→</span><span class="step">NL-to-SQL (read-only)</span><span class="arr">→</span><span class="step result">answer from Postgres</span></div>
+      <p class="small muted">"How many Windows hosts are EOL?" — the SQL it runs is blocked from mutating anything.</p>
+    </div>
+    <div class="card">
+      <h3>Script-assisted gathering <span class="tag opt">optional · off by default</span></h3>
+      <p class="small muted">When a built-in tool can't reach a fact, it can write a read-only script.</p>
+      <div class="flow"><span class="step trigger">enabled + asked</span><span class="arr">→</span><span class="step">generate PS/Py/Bash</span><span class="arr">→</span><span class="step">deny-list + sandbox + audit</span><span class="arr">→</span><span class="step result">output + saved script</span></div>
+      <p class="small muted">Disabled unless <code>scripts_enabled=true</code>. See the guardrail caveat below.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 04 USING IT -->
+<section id="use"><div class="container">
+  <h2><span class="num">04</span>How to interact with it</h2>
+  <p class="sub">There are four ways you'll touch the agent day to day. You rarely need the API — most work happens in the UI.</p>
+  <div class="grid g2">
+    <div class="card">
+      <h3>💬 The chat (most common)</h3>
+      <p class="small muted">In the Streamlit UI sidebar, ask in plain English. It translates to read-only SQL over the inventory and answers from real rows.</p>
+      <pre>"Which hosts haven't reported in 7 days?"
+"List Octopus tentacles that are offline."
+"What changed on the core firewall this week?"</pre>
+      <p class="ptr">Trust it because: read-only, grounded in the DB, and every query is audited.</p>
+    </div>
+    <div class="card">
+      <h3>🖥 The dashboards</h3>
+      <p class="small muted">Browse without asking. Each page is a live view of one slice:</p>
+      <ul class="tight">
+        <li><b>Home</b> — fleet health at a glance</li>
+        <li><b>Resources / Drift Events / Collection Runs</b> — the inventory + what changed</li>
+        <li><b>Integration Proposals</b> — approve/decline new coverage</li>
+        <li><b>Instincts · Agent Activity · Decisions · Generated Scripts</b> — the brain's memory &amp; audit trail</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>⚡ Trigger work (API)</h3>
+      <p class="small muted">Kick an immediate sweep instead of waiting for the schedule:</p>
+      <pre>POST /sweeps/{domain}
+  header: X-Infra-Token: &lt;secret&gt;   # if configured
+
+# 409 = a sweep for that domain is already running</pre>
+      <p class="ptr">Inbound webhooks (<code>/webhooks/gitlab|octopus|ansible|…</code>) let your tools nudge it on change.</p>
+    </div>
+    <div class="card">
+      <h3>📥 Consume its output</h3>
+      <p class="small muted">You don't always go to the agent — it comes to you:</p>
+      <ul class="tight">
+        <li><b>Jira tickets</b> when drift needs action</li>
+        <li><b>Confluence pages</b> kept current automatically (your living docs)</li>
+        <li><b>GitLab MRs</b> proposing inventory corrections — review &amp; merge</li>
+        <li><b>LangSmith traces</b> (if enabled) for deep "why did it do that?"</li>
+      </ul>
+    </div>
+  </div>
+  <p class="ptr">Command-level detail (env vars, install, every endpoint) lives in <code>docs/USER_GUIDE.md</code> — this page stays conceptual.</p>
+</div></section>
+
+<!-- 05 GUARDRAILS -->
+<section id="guardrails"><div class="container">
+  <h2><span class="num">05</span>Guardrails — why you can trust it</h2>
+  <p class="sub">The safety model is layered and, crucially, <b>enforced in code</b> — not just convention. Internalise this before you let it run.</p>
+  <div class="grid g2">
+    <div class="card">
+      <div class="gr"><div class="ic">✓</div><div><h3>Read-only by construction <i>and</i> enforcement</h3><p class="small muted">Collectors only issue GETs. The LLM can't cheat: <code>ReadOnlyToolValidator</code> blocks mutating HTTP / SQL / Ansible, attached to every tool call.</p></div></div>
+      <div class="gr"><div class="ic">4</div><div><h3>Exactly four write paths</h3><p class="small muted">Postgres, GitLab MR, Jira, Confluence. No other code path mutates anything, anywhere.</p></div></div>
+      <div class="gr"><div class="ic">⛨</div><div><h3>Propose, never dispose</h3><p class="small muted">Versioned-infra changes leave as MRs a human reviews. The agent never pushes to a default branch.</p></div></div>
+      <div class="gr"><div class="ic">✋</div><div><h3>Approval gates</h3><p class="small muted"><code>integration_approval_required</code> holds new integrations / cadence changes for a human.</p></div></div>
+    </div>
+    <div class="card">
+      <div class="gr"><div class="ic">🔑</div><div><h3>Webhook authentication</h3><p class="small muted">Shared-secret, constant-time compared. <code>webhook_auth_required=true</code> fails closed when a secret is missing.</p></div></div>
+      <div class="gr"><div class="ic">🛡</div><div><h3>DLP redaction</h3><p class="small muted">Tool I/O scanned for cards / secrets and redacted; can be fail-closed.</p></div></div>
+      <div class="gr"><div class="ic">🔒</div><div><h3>De-duplicated runs</h3><p class="small muted">Redis token-locks per domain — no overlapping sweeps (<code>409 / scan pending</code>).</p></div></div>
+      <div class="gr"><div class="ic">📓</div><div><h3>Full auditability</h3><p class="small muted">Every action, every LLM decision, plus optional end-to-end LangSmith traces.</p></div></div>
+    </div>
+  </div>
+  <div class="callout warn"><b>⚠ One honest caveat — script execution.</b> The script runner is a <b>deny-list filter, not a jail</b>. It ships <b>off by default</b> (<code>scripts_enabled=false</code>). Its real boundary is being gated-off plus a non-root container — keep it disabled unless you're isolated and understand the trade-off.</div>
+</div></section>
+
+<!-- 06 TRUST & ACCURACY -->
+<section id="trust"><div class="container">
+  <h2><span class="num">06</span>Accuracy &amp; hallucination prevention</h2>
+  <p class="sub">For an audit/documentation agent, a confidently <i>wrong</i> fact is worse than a gap. The architecture is anti-hallucination <b>by design</b> — and we lean into that.</p>
+  <div class="grid g2">
+    <div class="card">
+      <h3>The structural defense (already true)</h3>
+      <ul class="tight">
+        <li><b>Facts are scraped, not generated.</b> The LLM never invents infra facts — deterministic collectors produce the truth; the model only reasons over real data.</li>
+        <li><b>Drift narratives are grounded in a real diff.</b> The model summarizes actual DeepDiff output that's in its context.</li>
+        <li><b>Discovery requires evidence.</b> Findings are structured JSON with a cited <code>evidence</code> source — no source, no finding.</li>
+        <li><b>The LLM is a reasoner over retrieved facts, never a knowledge source.</b></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>The practices we apply / are tightening</h3>
+      <ul class="tight">
+        <li><b>Chat returns its receipts</b> — the SQL it ran + the actual rows, so answers are auditable, and "no matching data" instead of a guess.</li>
+        <li><b>Structured outputs</b> (schemas) constrain what the model may say.</li>
+        <li><b>Low temperature</b> on factual paths; verification pass before high-stakes writes (a ticket or MR).</li>
+        <li><b>Bounded, relevant context</b> — only the facts a step needs are put in front of the model.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout soon"><b>↗ Coming: a retrieval (RAG) memory layer.</b> A vector index over the agent's own accumulated <i>text</i> — Confluence pages, past drift narratives, reusable scripts, instincts, runbooks — will (a) make the self-improvement loop's reuse <i>semantic</i> ("seen a drift like this before?") and (b) ground chat/discovery answers in retrieved evidence to cut hallucination further. It's a memory for the <i>unstructured</i> knowledge; the structured inventory stays in SQL. <span class="muted">Design in progress — pgvector vs Qdrant under evaluation.</span></div>
+</div></section>
+
+<!-- 07 PERFORMANCE -->
+<section id="perf"><div class="container">
+  <h2><span class="num">07</span>Performance — where time &amp; cost go</h2>
+  <p class="sub">Two different budgets: <b>wall-clock</b> (dominated by API round-trips) and <b>tokens</b> (dominated by the LLM paths). They're tuned separately.</p>
+  <div class="stats">
+    <div class="stat"><div class="big">I/O-bound</div><div class="lbl">Sweeps are mostly network round-trips to GitLab / Octopus / vSphere / Rapid7 — not CPU.</div></div>
+    <div class="stat"><div class="big">LLM = cost</div><div class="lbl">Discovery, drift-learning &amp; chat drive token spend; routine reasoning can run on a cheaper model.</div></div>
+    <div class="stat"><div class="big">Indexed</div><div class="lbl">Hot query paths have DB indexes; Redis dedup prevents pile-ups.</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h3>Wall-clock levers</h3>
+      <ul class="tight">
+        <li><b>Concurrent collection</b> within an agent (async + bounded fan-out) — the biggest single win on heavy domains.</li>
+        <li><b>Stagger cadences</b> so domains don't all fire on the same minute.</li>
+        <li><b>Batch DB writes</b> per run instead of per item.</li>
+        <li><b>Conditional fetch</b> (ETag / version) to skip unchanged resources.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Token / cost levers</h3>
+      <ul class="tight">
+        <li><b>Cheap model for routine reasoning</b>; reserve the top model for hard synthesis.</li>
+        <li><b>Prompt caching</b> for the stable schema/system preamble.</li>
+        <li><b>Cap reasoning iterations</b> (already bounded) and keep injected context tight.</li>
+        <li><b>Semantic reuse</b> (the coming RAG layer) avoids re-deriving what's already known.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note">None of these change the architecture — they're tuning knobs. Expect the rhythm in <a href="#results">Results</a>: 6-hourly for most domains, daily for heavy APIs, weekly for the LLM-driven jobs.</p>
+</div></section>
+
+<!-- 08 RESULTS -->
+<section id="results"><div class="container">
+  <h2><span class="num">08</span>What to expect — where things land</h2>
+  <p class="sub">After Infra Brain runs, results show up in predictable places. The <b>first</b> sweep of a domain just builds the baseline; <b>drift appears from the second run onward</b>, once there's a prior snapshot to compare.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Workflow</th><th>Lands in</th><th>Where you see it</th></tr>
+    <tr><td><b>Collection sweep</b></td><td><code>resources</code>, <code>snapshots</code>, <code>collection_runs</code></td><td>UI: <b>Resources</b>, <b>Collection Runs</b></td></tr>
+    <tr><td><b>Drift detected</b></td><td><code>drift_events</code> + Jira + Confluence + GitLab MR</td><td>UI: <b>Drift Events</b>; your Jira/Confluence/GitLab</td></tr>
+    <tr><td><b>Discovery</b></td><td><code>discovery_finding</code> / integration proposals</td><td>UI: <b>Integration Proposals</b></td></tr>
+    <tr><td><b>Self-improvement</b></td><td><code>instincts</code>, <code>observations</code></td><td>UI: <b>Instincts</b> (high-confidence marked "applied")</td></tr>
+    <tr><td><b>Generated scripts</b></td><td><code>generated_scripts</code> + GitLab script-library commit</td><td>UI: <b>Generated Scripts</b></td></tr>
+    <tr><td><b>Every action / decision</b></td><td><code>agent_action_log</code>, <code>agent_decision_log</code></td><td>UI: <b>Agent Activity</b>, <b>Decisions</b>; LangSmith</td></tr>
+    <tr><td><b>Fleet status</b></td><td>aggregated from the above</td><td>UI: <b>Home</b></td></tr>
+  </table></div>
+  <div class="callout safe"><b>✓ Rhythm to expect:</b> on-prem-ish domains refresh ~6 hourly; heavier API domains daily; discovery &amp; drift-learning weekly. <code>/health</code> reports Postgres + Redis so you always know it's alive.</div>
+</div></section>
+
+<!-- 09 ROLES -->
+<section id="roles"><div class="container">
+  <h2><span class="num">09</span>Find your lane</h2>
+  <p class="sub">Same system, three ways to live with it. Start here, then go deeper in the linked docs.</p>
+  <div class="grid g3">
+    <div class="card">
+      <div class="lane-head"><span class="badge">👷 Run it</span><h3>Operators / SREs</h3></div>
+      <ul class="tight">
+        <li>Kick a manual sweep: <code>POST /sweeps/{domain}</code> (<span class="kbd">X-Infra-Token</span> if set).</li>
+        <li>Triage <b>Drift Events</b>; follow the Jira ticket + proposed MR.</li>
+        <li>Approve/decline on <b>Integration Proposals</b>.</li>
+        <li>Audit via <b>Agent Activity</b> / <b>Decisions</b>; review <b>Generated Scripts</b>.</li>
+        <li>Watch <code>/health</code>; expect <code>409</code> if a sweep is locked.</li>
+      </ul>
+      <p class="ptr">Deeper → <code>docs/USER_GUIDE.md</code>.</p>
+    </div>
+    <div class="card">
+      <div class="lane-head"><span class="badge">💬 Use it</span><h3>Consumers / stakeholders</h3></div>
+      <ul class="tight">
+        <li>Ask the <b>chat</b> in plain English — read-only answers from live inventory.</li>
+        <li>Read the auto-maintained <b>Confluence</b> pages.</li>
+        <li>Open a <b>Drift Event</b> to see what changed and the proposed fix.</li>
+        <li>Trust basis: an audited, read-only system can't have broken anything to answer you.</li>
+      </ul>
+      <p class="ptr">Deeper → README "Features"; UI <b>Home</b>.</p>
+    </div>
+    <div class="card">
+      <div class="lane-head"><span class="badge">🛠 Extend it</span><h3>Developers / extenders</h3></div>
+      <ul class="tight">
+        <li>Subclass <code>BaseAgent</code> (deterministic) or <code>LLMAgent</code> (reasoning).</li>
+        <li>Keep tools read-only; <b>route LLM tools through the callback chain</b>.</li>
+        <li>Register in <code>AGENT_REGISTRY</code> + add a cadence; SKIP_HOOK if not a snapshot collector.</li>
+        <li>Mirror existing tests in <code>tests/</code>; the suite gates every change.</li>
+      </ul>
+      <p class="ptr">Deeper → design spec; <code>agents/llm_base.py</code>.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 10 GLOSSARY -->
+<section id="glossary"><div class="container">
+  <h2><span class="num">10</span>Glossary &amp; pointers</h2>
+  <dl class="gloss">
+    <div><dt>Drift</dt><dd>A difference between the latest snapshot and the prior one — reality changed.</dd></div>
+    <div><dt>Snapshot</dt><dd>A point-in-time capture of a resource's config/state, diffed for drift.</dd></div>
+    <div><dt>Instinct</dt><dd>A learned heuristic read back into future reasoning.</dd></div>
+    <div><dt>Observation</dt><dd>A record of which tools an agent used — feeds learning context.</dd></div>
+    <div><dt>Scan point</dt><dd>A scheduled collection entry for a domain.</dd></div>
+    <div><dt>Propose, never dispose</dt><dd>Fixes go out as reviewable MRs/tickets, never direct infra changes.</dd></div>
+    <div><dt>RAG / retrieval (planned)</dt><dd>Semantic search over the agent's accumulated text to ground answers &amp; reuse.</dd></div>
+    <div><dt>Hybrid layer</dt><dd>Deterministic collectors + an enforced LLM reasoning layer, side by side.</dd></div>
+  </dl>
+  <p class="ptr" style="margin-top:18px">Canonical docs: <code>README.md</code> · <code>docs/USER_GUIDE.md</code> · <code>docs/superpowers/specs/2026-06-18-infra-brain-agent-design.md</code> · <code>CHANGELOG.md</code>.</p>
+</div></section>
+
+<footer><div class="container">
+  Infra Brain — read-only infrastructure intelligence. Living onboarding document; links to canonical docs rather than repeating them. <code>net</code> is a not-yet-implemented stub; script execution is off by default; the retrieval/memory layer is in design.
+</div></footer>
+
+</div>

@@ -1,0 +1,31 @@
+# k8s/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: infra-brain-config
+  namespace: infra-brain
+data:
+  GITLAB_URL: "https://gitlab.example.com"
+  GITLAB_SSL_VERIFY: "true"
+  OCTOPUS_URL: "http://198.51.100.20"
+  OCTOPUS_SSL_VERIFY: "true"
+  RAPID7_USERNAME: "api_key_auth"
+  RAPID7_SSL_VERIFY: "true"
+  JIRA_PROJECT_KEY: "INFRA"
+  CONFLUENCE_SPACE_KEY: "INFRA"
+  DLP_FAIL_CLOSED: "1"
+  SCAN_READONLY_ENFORCE: "1"
+  INTEGRATION_APPROVAL_REQUIRED: "1"
+  WEBHOOK_AUTH_REQUIRED: "1"
+  INFRA_HSA_ZONE: "0"
+  INFRA_OPS_ENV_MAX_AGE_DAYS: "30"
+  INFRA_OPS_OBSERVE: "1"
+  # F23: this is a hardened (deployed) cluster — refuse to boot the app/MCP if
+  # INFRA_BRAIN_DEV is ever truthy here (dev mode disables auth). "deployed" is
+  # the canonical value; "production" remains a legacy alias in the code guard.
+  ENVIRONMENT: "deployed"
+  # F18: agent-core runs replicas:2 behind an HPA. The embedded scheduler MUST
+  # stay off here — the dedicated scheduler Deployment (scheduler.yaml,
+  # replicas:1) is the single scheduler. Enabling it would fan every unlocked
+  # job out once per API replica.
+  EMBEDDED_SCHEDULER_ENABLED: "false"

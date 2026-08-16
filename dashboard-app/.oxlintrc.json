@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    "no-restricted-globals": ["error", "fetch"],
+    "no-empty": "error"
+  },
+  "overrides": [
+    {
+      "files": ["src/api.ts"],
+      "rules": {
+        "no-restricted-globals": "off"
+      }
+    }
+  ]
+}

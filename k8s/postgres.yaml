@@ -1,0 +1,88 @@
+# k8s/postgres.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: infra-brain
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      initContainers:
+        - name: bws-bootstrap
+          image: ${CI_REGISTRY_IMAGE:-infra-brain}:${IMAGE_TAG:-latest}
+          command: ["/bin/bash", "scripts/bws_bootstrap.sh"]
+          env:
+            - name: BWS_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bws-access-token
+                  key: BWS_ACCESS_TOKEN
+            - name: SECRETS_OUT
+              value: /run/secrets/env
+          volumeMounts:
+            - name: secrets-vol
+              mountPath: /run/secrets
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:pg15
+          command:
+            - /bin/bash
+            - -c
+            - "source /run/secrets/env && exec docker-entrypoint.sh postgres"
+          env:
+            - name: POSTGRES_USER
+              value: infra
+            - name: POSTGRES_DB
+              value: infra_brain
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "infra", "-d", "infra_brain"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "infra", "-d", "infra_brain"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: secrets-vol
+              mountPath: /run/secrets
+      volumes:
+        - name: secrets-vol
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 50Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: infra-brain
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432

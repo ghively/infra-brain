@@ -1,0 +1,307 @@
+{
+  "name": "infra-brain",
+  "version": "0.1.0",
+  "description": "infra-brain development environment — infrastructure audit agent with full LangChain Lab integration, domain-specific skills, safety hooks, and orchestration routing.",
+  "author": {
+    "name": "A. Operator",
+    "email": "youruser@example.com"
+  },
+  "keywords": ["infra-brain", "langchain", "langgraph", "infrastructure", "audit", "agents"],
+  "skills": [
+    {
+      "name": "orchestrate",
+      "file": "skills/orchestrator/SKILL.md",
+      "description": "Master routing skill. Routes any task to the right skill, subagent, and workflow sequence. Start here for any new work.",
+      "invocation": ["/orchestrate", "what should I do", "where do I start", "how do I", "I want to", "new here", "getting started"]
+    },
+    {
+      "name": "agent-register",
+      "file": "skills/agent-register/SKILL.md",
+      "description": "Full workflow for registering a new domain agent: scaffold, wire into supervisor and scheduler, run completeness check.",
+      "invocation": ["/agent-register", "new agent", "add agent", "register agent"]
+    },
+    {
+      "name": "agent-scaffold",
+      "file": "skills/agent-scaffold/SKILL.md",
+      "description": "Create a new domain agent file and matching test file from the project template.",
+      "invocation": ["/agent-scaffold", "scaffold agent", "create agent file"]
+    },
+    {
+      "name": "sweep-debug",
+      "file": "skills/sweep-debug/SKILL.md",
+      "description": "Diagnose failed or empty sweeps via 5-layer triage: DB, audit_log, Redis, logs, LangSmith.",
+      "invocation": ["/sweep-debug", "sweep not working", "no sweep data", "sweep failed", "sweep empty"]
+    },
+    {
+      "name": "dev-status",
+      "file": "skills/dev-status/SKILL.md",
+      "description": "10-check developer tooling health audit: registry, tests, schedules, callbacks, migrations, k8s, env parity, SQL.",
+      "invocation": ["/dev-status", "health check", "is everything ok", "dev status", "sanity check"]
+    },
+    {
+      "name": "migration-create",
+      "file": "skills/migration-create/SKILL.md",
+      "description": "Safe Alembic migration workflow with ORM sync check and danger-pattern review.",
+      "invocation": ["/migration-create", "new migration", "database migration", "alembic migration", "add column", "new table"]
+    },
+    {
+      "name": "deploy-check",
+      "file": "skills/deploy-check/SKILL.md",
+      "description": "Full pre-deployment validation checklist before pushing to master.",
+      "invocation": ["/deploy-check", "pre-deploy", "ready to deploy", "deployment checklist"]
+    },
+    {
+      "name": "validate-sql",
+      "file": "skills/validate-sql/SKILL.md",
+      "description": "Run the static SQL column validator on all UI queries to catch column name drift.",
+      "invocation": ["/validate-sql", "validate sql", "check sql queries", "sql columns"]
+    },
+    {
+      "name": "openui-sync",
+      "file": "skills/openui-sync/SKILL.md",
+      "description": "Audit OpenUI component library vs API endpoints: cross-check each component has a backing endpoint, report orphans and opportunities.",
+      "invocation": ["/openui-sync", "openui sync", "component sync", "openui audit", "check components"]
+    },
+    {
+      "name": "lc:start",
+      "file": "skills/start.md",
+      "description": "Full onboarding for new LangChain/LangGraph projects. Goal selection, scaffold, first run, LangSmith.",
+      "invocation": ["/lc-start", "start a langchain project", "new langchain project", "langchain tutorial"]
+    },
+    {
+      "name": "lc:agent",
+      "file": "skills/lc-agent/SKILL.md",
+      "description": "ReAct, Supervisor, Plan-and-Execute, Reflection, and Send API agent patterns.",
+      "invocation": ["/lc-agent", "build an agent", "react agent", "multi-agent", "agent pattern"]
+    },
+    {
+      "name": "lc:graph",
+      "file": "skills/graph.md",
+      "description": "StateGraph, nodes, edges, checkpointing, interrupts, streaming, subgraphs, Send API.",
+      "invocation": ["/lc-graph", "stategraph", "langgraph nodes", "graph edges", "checkpointing"]
+    },
+    {
+      "name": "lc:rag",
+      "file": "skills/rag/SKILL.md",
+      "description": "8 RAG pipeline variants: naive, multi-query, compression, self-RAG, CRAG, agentic.",
+      "invocation": ["/lc-rag", "rag pipeline", "document qa", "retrieval", "vector search rag"]
+    },
+    {
+      "name": "lc:memory",
+      "file": "skills/lc-memory/SKILL.md",
+      "description": "7 memory patterns: buffer, trimming, summary, checkpointing, vector, entity, Store API.",
+      "invocation": ["/lc-memory", "conversation memory", "chat history", "add memory"]
+    },
+    {
+      "name": "lc:tools",
+      "file": "skills/lc-tools/SKILL.md",
+      "description": "@tool decorator, StructuredTool, async tools, ToolNode, toolkits, MCP integration.",
+      "invocation": ["/lc-tools", "create a tool", "toolnode", "custom tool"]
+    },
+    {
+      "name": "lc:lcel",
+      "file": "skills/lc-lcel/SKILL.md",
+      "description": "Runnable interface, pipe composition, RunnablePassthrough/Parallel/Lambda/Branch.",
+      "invocation": ["/lc-lcel", "lcel", "langchain pipe", "runnable"]
+    },
+    {
+      "name": "lc:deploy",
+      "file": "skills/lc-deploy/SKILL.md",
+      "description": "Deployment: local dev, LangGraph Platform, Docker, Kubernetes.",
+      "invocation": ["/lc-deploy", "deploy langchain", "langgraph platform", "kubernetes deploy"]
+    },
+    {
+      "name": "lc:test",
+      "file": "skills/lc-test/SKILL.md",
+      "description": "Unit, state, integration tests; LangSmith evaluation; CI/CD.",
+      "invocation": ["/lc-test", "test langchain", "langsmith evaluation", "write tests"]
+    },
+    {
+      "name": "lc:debug",
+      "file": "skills/lc-debug/SKILL.md",
+      "description": "Structured triage for all LangChain/LangGraph error categories.",
+      "invocation": ["/lc-debug", "debug langchain", "langchain error", "not working", "traceback"]
+    },
+    {
+      "name": "lc:monitor",
+      "file": "skills/lc-monitor/SKILL.md",
+      "description": "LangSmith setup, auto/manual tracing, dashboards, online eval, Prompt Hub.",
+      "invocation": ["/lc-monitor", "langsmith tracing", "trace my agent", "observability"]
+    },
+    {
+      "name": "lc:guardrails",
+      "file": "skills/lc-guardrails/SKILL.md",
+      "description": "Prompt injection, PII protection, cost circuit breaker, HITL guardrails.",
+      "invocation": ["/lc-guardrails", "prompt injection", "PII", "guardrails", "safety"]
+    },
+    {
+      "name": "lc:resilience",
+      "file": "skills/lc-resilience/SKILL.md",
+      "description": "Retry with jitter, fallback chains, circuit breaker, connection pooling.",
+      "invocation": ["/lc-resilience", "retry", "fallback", "circuit breaker", "reliability"]
+    },
+    {
+      "name": "lc:compliance",
+      "file": "skills/lc-compliance/SKILL.md",
+      "description": "GDPR data minimization, data residency, HIPAA PHI guard, EU AI Act HITL.",
+      "invocation": ["/lc-compliance", "GDPR", "HIPAA", "compliance", "privacy"]
+    },
+    {
+      "name": "lc:audit",
+      "file": "skills/lc-audit/SKILL.md",
+      "description": "Immutable audit tables, cryptographic hash chains, compliance views.",
+      "invocation": ["/lc-audit", "audit log", "compliance logging", "hash chain"]
+    },
+    {
+      "name": "lc:providers",
+      "file": "skills/lc-providers/SKILL.md",
+      "description": "Configure/swap LLM providers: Anthropic, OpenAI, Azure, Bedrock, Gemini, Ollama.",
+      "invocation": ["/lc-providers", "switch provider", "change LLM", "use Claude", "use Ollama"]
+    },
+    {
+      "name": "lc:ui",
+      "file": "skills/lc-ui/SKILL.md",
+      "description": "Streamlit, Chainlit, Gradio, FastAPI+HTMX streaming UI with auth and file upload.",
+      "invocation": ["/lc-ui", "chat interface", "Streamlit", "UI", "dashboard frontend"]
+    },
+    {
+      "name": "lc:data",
+      "file": "skills/lc-data/SKILL.md",
+      "description": "Text-to-SQL, safe SQL tool, Pandas agent, OpenAPI agent, multi-source data.",
+      "invocation": ["/lc-data", "SQL agent", "text to SQL", "pandas agent"]
+    },
+    {
+      "name": "lc:vectorstore",
+      "file": "skills/lc-vectorstore/SKILL.md",
+      "description": "pgvector, Chroma, Pinecone, hybrid search, multi-tenant namespacing.",
+      "invocation": ["/lc-vectorstore", "vector store", "embeddings", "hybrid search"]
+    },
+    {
+      "name": "lc:multimodal",
+      "file": "skills/lc-multimodal/SKILL.md",
+      "description": "Image analysis, PDF loaders, table extraction, audio, multimodal RAG.",
+      "invocation": ["/lc-multimodal", "image", "PDF", "audio", "multimodal"]
+    },
+    {
+      "name": "lc:context-engineer",
+      "file": "skills/context-engineer.md",
+      "description": "Prompt templates, system prompts, few-shot examples, structured output.",
+      "invocation": ["/lc-context", "prompt engineering", "system prompt", "few-shot"]
+    },
+    {
+      "name": "lc:patterns",
+      "file": "skills/lc-patterns/SKILL.md",
+      "description": "Recommend the right LangChain/LangGraph pattern for your use case.",
+      "invocation": ["/lc-patterns", "which pattern", "what pattern should I use"]
+    },
+    {
+      "name": "lc:explain",
+      "file": "skills/lc-explain/SKILL.md",
+      "description": "Explain any LangChain/LangGraph concept with analogy, code, and common mistakes.",
+      "invocation": ["/lc-explain", "explain", "what is", "how does", "I don't understand"]
+    },
+    {
+      "name": "lc:docs",
+      "file": "skills/lc-docs/SKILL.md",
+      "description": "Fetch live documentation via Context7. Up-to-date API reference.",
+      "invocation": ["/lc-docs", "documentation", "docs for", "how do I use"]
+    },
+    {
+      "name": "lc:review",
+      "file": "skills/lc-reviewer/AGENT.md",
+      "description": "Review LangChain code across 5 dimensions: correctness, best practices, performance, pitfalls, production.",
+      "invocation": ["/lc-review", "code review", "review this", "is this correct"]
+    },
+    {
+      "name": "lc:scaffold",
+      "file": "skills/lc-scaffold/SKILL.md",
+      "description": "Scaffold project/agent/graph/RAG/tool/chain/evaluator/dockerfile files.",
+      "invocation": ["/lc-scaffold", "scaffold", "generate boilerplate"]
+    },
+    {
+      "name": "lc:trace",
+      "file": "skills/lc-trace/SKILL.md",
+      "description": "Inject LangSmith tracing into an existing Python file.",
+      "invocation": ["/lc-trace", "add tracing", "inject tracing"]
+    },
+    {
+      "name": "lc:guard",
+      "file": "commands/lc-guard.md",
+      "description": "Audit project for 8 security gaps and generate a guardrails layer.",
+      "invocation": ["/lc-guard", "security audit", "audit for vulnerabilities"]
+    },
+    {
+      "name": "lc:erase",
+      "file": "commands/lc-erase.md",
+      "description": "GDPR Article 17 right-to-erasure: generate erasure script + audit SQL + 30-day deadline.",
+      "invocation": ["/lc-erase", "right to erasure", "delete user data", "GDPR erasure"]
+    },
+    {
+      "name": "lc:antipatterns",
+      "file": "commands/lc-antipatterns.md",
+      "description": "Interactive catalog of 15 LangChain antipatterns with fixes.",
+      "invocation": ["/lc-antipatterns", "antipatterns", "bad practices", "common mistakes"]
+    },
+    {
+      "name": "ci-debug",
+      "file": "skills/ci-debug/SKILL.md",
+      "description": "Diagnose failing GitLab CI pipelines for infra-brain (project 42): fetch job traces, classify failure type (YAML, runner, test, build, deploy, CVE), suggest copy-paste fix.",
+      "invocation": ["/ci-debug", "pipeline failed", "CI broken", "pipeline is red", "CI job failed", "pipeline error"]
+    },
+    {
+      "name": "tool-register",
+      "file": "skills/tool-register/SKILL.md",
+      "description": "Register a new LangChain @tool for an infra-brain domain agent. Creates tool file, test file, wires into agent, runs lc-safety-reviewer, runs tests.",
+      "invocation": ["/tool-register", "new tool", "add tool", "register tool", "add integration", "new api tool"]
+    },
+    {
+      "name": "onboard",
+      "file": "skills/onboard/SKILL.md",
+      "description": "infra-brain-specific onboarding: safety model, 23-domain agent architecture, read-only guarantee, task map, critical constraints, and first contribution guide.",
+      "invocation": ["/onboard", "getting started", "new to this repo", "what is this project", "first time", "orient me", "new contributor", "how do I start"]
+    },
+    {
+      "name": "openui-sync",
+      "file": "skills/openui-sync/SKILL.md",
+      "description": "Audit and sync the OpenUI custom-views feature: check the prompt.py generator freshness and the custom_views schema against infra-brain API endpoints and the React custom-views components under dashboard-app/src/.",
+      "invocation": ["/openui-sync", "sync openui", "openui audit", "check components", "component gaps", "prop drift", "openui out of sync", "update component library"]
+    }
+  ],
+  "agents": [
+    {
+      "name": "infra-researcher",
+      "file": "agents/infra-researcher.md",
+      "description": "Read-only parallel research agent. Spawned by the orchestrator to gather context before implementation. Reads files, checks registries, inspects test structure, queries git history."
+    },
+    {
+      "name": "lc-safety-reviewer",
+      "file": "agents/lc-safety-reviewer.md",
+      "description": "Reviews changes to callbacks/, supervisor.py, or tools/ for safety: callback registration, sync/async mismatches, read-only enforcement, DLP bypass paths."
+    },
+    {
+      "name": "lc-migration-reviewer",
+      "file": "agents/lc-migration-reviewer.md",
+      "description": "Reviews Alembic migrations for safety: NOT NULL without defaults, DROP TABLE, missing CONCURRENTLY, missing lock_timeout."
+    },
+    {
+      "name": "lc-api-reviewer",
+      "file": "agents/lc-api-reviewer.md",
+      "description": "Reviews FastAPI routes for async/sync correctness, missing auth, sync DB calls, missing response_model."
+    },
+    {
+      "name": "lc-agent-completeness",
+      "file": "agents/lc-agent-completeness.md",
+      "description": "Validates new domain agents have all 4 wiring points: agent file, test file, AGENT_REGISTRY entry, scheduler entry."
+    },
+    {
+      "name": "sweep-health",
+      "file": "agents/sweep-health.md",
+      "description": "Cross-domain sweep health reporter. Queries collection_runs via postgres-infra MCP for all 23 domains. Reports status, resource counts, drift counts, and flags overdue or failed domains."
+    },
+    {
+      "name": "drift-analyst",
+      "file": "agents/drift-analyst.md",
+      "description": "Per-domain drift comparison agent. Queries the two most recent completed runs and compares drift_events: N new, N resolved, N persistent, resource delta. Requires postgres-infra MCP."
+    }
+  ]
+}

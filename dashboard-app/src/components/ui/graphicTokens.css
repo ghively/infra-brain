@@ -1,0 +1,29 @@
+/**
+ * Local CSS custom properties for the Phase 1 "graphic widget" instruments
+ * (DriftTapeInstrument, TrendBarChart, RelationshipMiniGraph).
+ *
+ * Scoped under `.gw-scope` rather than added to `:root` — this repo has a
+ * concurrent agent building the real dashboard-app/src/lib/tokens.ts /
+ * index.css palette for the ground-up redesign, and at the time this file
+ * was written that module still only carried the legacy v1 (--ib-*) colors,
+ * not the new Phase 1 palette these widgets were designed against. Scoping
+ * avoids colliding with whatever the tokens agent lands under :root. If/when
+ * dashboard-app/src/lib/tokens.ts grows these exact values as real design
+ * tokens, this file can be deleted and callers can rely on the global vars
+ * instead — nothing here should get architecturally attached to.
+ */
+
+.gw-scope {
+  --gw-bg: #1a1c21;
+  --gw-panel: #22252c;
+  --gw-raised: #262a32;
+  --gw-border: #32363f;
+  --gw-grid: #2c3038;
+  --gw-text: #d8dbe2;
+  --gw-muted: #8a8fa0;
+  --gw-faint: #6a6f7d;
+  --gw-red: #f0654e;
+  --gw-yellow: #d9a62e;
+  --gw-green: #4cbb6c;
+  --gw-blue: #5b9de8;
+}

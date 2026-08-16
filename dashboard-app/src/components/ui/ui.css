@@ -1,0 +1,787 @@
+/* Phase 1 shared primitives — design foundation styles.
+ *
+ * Token provenance: these are the Phase-1-approved dark-slate tokens from
+ * the round-4 synthesis mockup (docs/decisions plan:
+ * /home/youruser/.claude/plans/tidy-inventing-duckling.md). `src/lib/tokens.ts`
+ * and `index.css`'s `:root` still carry the OLDER --ib-* palette (near-black
+ * #070b14 base) as of this file's authorship — a later reconciliation pass
+ * should fold these into tokens.ts/index.css as the single source of truth
+ * and delete this local :root block. Until then, these vars are scoped at
+ * :root here (harmless additions, no existing var names collide) so every
+ * ui/* component can share one definition instead of six copies.
+/* infra-brain dashboard — shared UI primitive styles (Phase 1 of the DR-6.1
+ * ground-up redesign; see /home/youruser/.claude/plans/tidy-inventing-duckling.md).
+ *
+ * Ported faithfully from the approved round-4 mockup. Three deliberate
+ * translations from the mockup's raw CSS:
+ *
+ *  1. CO-LOCATED, NOT index.css. The repo has exactly one global stylesheet and
+ *     no per-component CSS precedent, and the plan says to extend that
+ *     convention. This file does extend it in spirit — plain CSS classes, no
+ *     framework, no CSS-Modules/Tailwind/styled-components — but lives next to
+ *     the components that own it and is imported by them. Rationale: (a) the
+ *     `:root` block of index.css is being rewritten concurrently by the
+ *     tokens.ts pass, and appending 250 lines to the same file guarantees a
+ *     merge conflict for no benefit; (b) the new design system is self-contained
+ *     and independently deletable while pages migrate off the legacy `.ib-table`
+ *     /`.ib-card` classes, which still live in index.css and must keep working.
+ *
+ *  2. EVERY CLASS IS `.ib-`-PREFIXED and the table rules are scoped to `.ib-tbl`
+ *     rather than a bare `table` element selector. The mockup could style
+ *     `table`, `.panel`, `.chip`, `.null`, `.fk` globally because it was a
+ *     single standalone page; here a bare `table {}` rule would restyle all 39
+ *     existing pages, and `.chip` is already taken by index.css.
+ *
+ *  3. FONTS use the app's real vendored DM Mono / DM Sans (see the `@font-face`
+ *     blocks in index.css) instead of the mockup's generic system stacks — the
+ *     mockup used system fonts only because the Artifact CSP blocks font CDNs.
+ *
+ * The palette below is the approved token set, declared here with the mockup's
+ * own names. A concurrent branch is rewriting `src/lib/tokens.ts` + index.css's
+ * `:root` with this same palette; when the two branches fold together these
+ * declarations should be reconciled down to a single source (expected, tracked).
+ */
+
+:root {
+  --bg: #1a1c21;
+  --panel: #22252c;
+  --raised: #262a32;
+  --border: #32363f;
+  --grid: #2c3038;
+  --text: #d8dbe2;
+  --muted: #8a8fa0;
+  --faint: #6a6f7d;
+  --red: #f0654e;
+  --yellow: #d9a62e;
+  --green: #4cbb6c;
+  --blue: #5b9de8;
+  /* Real vendored families (index.css @font-face), not the mockup's system stacks. */
+  --ib-mono: "DM Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --ib-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ============================= SummaryBlock / StatTile ============================= */
+
+.summary-block {
+  display: grid;
+  grid-template-columns: 1.6fr repeat(4, 1fr);
+  gap: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.summary-block > div {
+  padding: 16px 18px;
+  border-right: 1px solid var(--border);
+}
+.summary-block > div:last-child {
+  border-right: none;
+}
+
+.stat-tile {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+}
+
+.lbl {
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+  font-family: "DM Mono", monospace;
+}
+
+.summary-block .val,
+.stat-tile .val {
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-family: "DM Sans", sans-serif;
+  color: var(--text);
+}
+
+.summary-block .hero-val {
+  font-size: 42px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.summary-block .sub,
+.stat-tile .sub {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.c-red { color: var(--red); }
+.c-yellow { color: var(--yellow); }
+.c-green { color: var(--green); }
+.c-blue { color: var(--blue); }
+
+.healthbar {
+  display: flex;
+  height: 8px;
+  margin-top: 12px;
+  border-radius: 2px;
+  overflow: hidden;
+  max-width: 320px;
+  background: var(--border);
+}
+.healthbar > span {
+  height: 100%;
+}
+
+@media (max-width: 960px) {
+  .summary-block {
+    grid-template-columns: 1fr 1fr;
+  }
+  .summary-block > div {
+    border-right: 1px solid var(--border);
+  }
+  .summary-block > div:nth-child(2n) {
+    border-right: none;
+  }
+  .summary-block > div:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 560px) {
+  .summary-block {
+    grid-template-columns: 1fr;
+  }
+  .summary-block > div {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-block > div:last-child {
+    border-bottom: none;
+  }
+}
+
+/* ============================= Button ============================= */
+
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+  white-space: nowrap;
+}
+.ui-btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.ui-btn:disabled,
+.ui-btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ui-btn-sm { font-size: 12px; padding: 5px 10px; }
+.ui-btn-md { font-size: 13px; padding: 8px 14px; }
+
+.ui-btn-primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #0d1117;
+}
+.ui-btn-primary:hover:not(:disabled) { background: #6ba8ec; }
+
+.ui-btn-secondary {
+  background: var(--raised);
+  border-color: var(--border);
+  color: var(--text);
+}
+.ui-btn-secondary:hover:not(:disabled) { background: var(--border); }
+
+.ui-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+.ui-btn-ghost:hover:not(:disabled) { background: var(--raised); color: var(--text); }
+
+.ui-btn-danger {
+  background: transparent;
+  border-color: var(--red);
+  color: var(--red);
+}
+.ui-btn-danger:hover:not(:disabled) { background: rgba(240, 101, 78, 0.12); }
+
+.ui-btn-spinner {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ============================= EmptyState ============================= */
+
+.ui-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 24px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  gap: 6px;
+}
+.ui-empty-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+.ui-empty-title {
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.ui-empty-hint {
+  font-size: 12.5px;
+  color: var(--muted);
+  max-width: 420px;
+}
+.ui-empty-error .ui-empty-title { color: var(--red); }
+/* not-configured: a setting was never supplied — same "needs attention"
+ * weight as filter-zero, but distinguishable from it via the icon/tone
+ * (amber, not neutral) since the fix is an env var, not a filter click. */
+.ui-empty-not-configured .ui-empty-icon,
+.ui-empty-not-configured .ui-empty-title { color: var(--yellow); }
+/* clean: ran and genuinely found nothing — good news, not a gap. Green so it
+ * never reads like an error or an unfinished collection. */
+.ui-empty-clean .ui-empty-icon,
+.ui-empty-clean .ui-empty-title { color: var(--green); }
+.ui-empty-action { margin-top: 10px; }
+
+/* ============================= Tabs ============================= */
+
+.ui-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+}
+.ui-tab {
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 9px 14px;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+.ui-tab:hover {
+  color: var(--text);
+}
+.ui-tab:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+.ui-tab[aria-selected="true"] {
+  color: var(--text);
+  border-bottom-color: var(--blue);
+}
+
+/* ============================= PageShell ============================= */
+
+.ui-page-shell {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.ui-page-shell-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  color: var(--blue);
+}
+.ui-page-shell-body {
+  flex: 1;
+  min-width: 0;
+}
+.ui-page-shell-title {
+  font-family: "DM Sans", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.ui-page-shell-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.ui-page-shell-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-top: 2px;
+  --red-deep: #8b2615;
+  --red-mid: #c0341d;
+}
+
+/* Screen-reader-only utility (used for table captions). */
+.ib-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------------ Panel */
+
+.ib-panel {
+  display: grid;
+  grid-template-columns: 4px 1fr;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--ib-sans);
+}
+
+.ib-panel-bd {
+  min-width: 0;
+}
+
+.ib-rail-ok {
+  background: var(--green);
+}
+.ib-rail-warn {
+  background: var(--yellow);
+}
+.ib-rail-err {
+  background: var(--red);
+}
+.ib-rail-info {
+  background: var(--blue);
+}
+
+.ib-panel-hd {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  background: var(--raised);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-family: var(--ib-mono);
+}
+.ib-panel-hd .ib-mn {
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--blue);
+}
+.ib-panel-hd .ib-pd {
+  color: var(--muted);
+}
+.ib-panel-hd .ib-panel-hd-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ib-panel-hd .ib-live {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--green);
+}
+/* When custom header content already claimed the auto margin, LIVE just trails it. */
+.ib-panel-hd .ib-panel-hd-right + .ib-live {
+  margin-left: 0;
+}
+.ib-panel-hd .ib-live::before {
+  content: "●";
+  margin-right: 5px;
+  font-size: 8px;
+}
+
+.ib-panel-ft {
+  border-top: 1px solid var(--border);
+  padding: 6px 14px;
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-family: var(--ib-mono);
+}
+.ib-panel-ft .ib-exit-warn {
+  color: var(--yellow);
+  font-weight: 600;
+}
+.ib-panel-ft .ib-exit-err {
+  color: var(--red);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------- DataTable toolbar */
+
+.ib-dt {
+  min-width: 0;
+  color: var(--text);
+}
+
+.ib-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.ib-toolbar .ib-tname {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--ib-mono);
+}
+.ib-toolbar .ib-tchip {
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: var(--raised);
+  color: var(--muted);
+  font-family: var(--ib-mono);
+}
+
+.ib-density {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ib-density .ib-dlbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+.ib-density .ib-seg {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.ib-density button {
+  border: none;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12px;
+  padding: 4px 12px;
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+  font-family: var(--ib-sans);
+}
+.ib-density button:last-child {
+  border-right: none;
+}
+.ib-density button[aria-pressed="true"] {
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+}
+.ib-density button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+
+/* --------------------------------------------------------- DataTable table */
+
+.ib-tbl-scroll {
+  overflow-x: auto;
+}
+
+.ib-tbl {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--ib-mono);
+}
+.ib-tbl th,
+.ib-tbl td {
+  border: 1px solid var(--grid);
+  padding: 6px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+.ib-tbl th:first-child,
+.ib-tbl td:first-child {
+  border-left: none;
+}
+.ib-tbl th:last-child,
+.ib-tbl td:last-child {
+  border-right: none;
+}
+
+/* Row density — driven by React state, written onto the wrapper as data-density. */
+.ib-dt[data-density="cozy"] .ib-tbl td {
+  padding: 9px 10px;
+}
+.ib-dt[data-density="tall"] .ib-tbl td {
+  padding: 14px 10px;
+}
+
+.ib-tbl thead th {
+  background: var(--raised);
+  font-weight: 600;
+  font-size: 11.5px;
+  color: var(--muted);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+}
+
+.ib-tbl th .ib-tg {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  line-height: 15px;
+  text-align: center;
+  font-size: 9.5px;
+  font-weight: 700;
+  border-radius: 3px;
+  margin-right: 6px;
+  background: var(--border);
+  color: #b9bec9;
+  vertical-align: -2px;
+}
+.ib-tbl th .ib-tg-pk {
+  background: var(--text);
+  color: var(--bg);
+}
+
+/* Sortable header: a real button so it is keyboard-operable, styled to look
+ * exactly like the plain <th> label it replaces. */
+.ib-tbl th .ib-th-btn {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  font: inherit;
+  color: inherit;
+}
+.ib-tbl th .ib-th-btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.ib-tbl th .ib-sort-caret {
+  margin-left: 6px;
+  font-size: 8px;
+  color: var(--blue);
+}
+
+.ib-tbl tbody tr:hover td {
+  background: rgba(91, 157, 232, 0.06);
+}
+.ib-tbl tbody tr.ib-tr-clickable {
+  cursor: pointer;
+}
+/* F-9: a clickable row is now a real tab stop (tabIndex=0) — give it the
+ * same focus-visible treatment as every other keyboard-operable control in
+ * this table (.ib-th-btn, .ib-fk). outline-offset is negative here (rather
+ * than the button/link default of +2) so the ring draws inside the row
+ * instead of overlapping the adjacent row's border. */
+.ib-tbl tbody tr.ib-tr-clickable:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+.ib-tbl td.ib-num {
+  text-align: right;
+}
+.ib-tbl td.ib-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 22px 10px;
+  font-family: var(--ib-sans);
+}
+
+/* ------------------------------------------------------------- Cell tokens */
+
+.ib-null {
+  color: var(--faint);
+  font-style: italic;
+  font-size: 11.5px;
+}
+
+.ib-fk {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--muted);
+  cursor: pointer;
+}
+.ib-fk:hover {
+  border-bottom: 1px solid var(--blue);
+  color: var(--blue);
+}
+.ib-fk:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.ib-fk .ib-fkid {
+  color: var(--faint);
+  font-size: 10.5px;
+  margin-left: 5px;
+}
+.ib-fk::after {
+  content: "↗";
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: 3px;
+}
+/* onClick-only variant renders a <button>; strip UA button chrome. */
+button.ib-fk {
+  all: unset;
+  color: var(--text);
+  border-bottom: 1px dotted var(--muted);
+  cursor: pointer;
+  font: inherit;
+}
+
+.ib-sev {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-radius: 3px;
+  padding: 1.5px 7px;
+  text-transform: uppercase;
+  font-family: var(--ib-mono);
+}
+.ib-sev-crit {
+  background: var(--red-deep);
+  color: #ffffff;
+  border: 1px solid var(--red-deep);
+}
+.ib-sev-high {
+  background: transparent;
+  color: var(--red);
+  border: 1.5px solid var(--red-mid);
+}
+.ib-sev-med {
+  background: transparent;
+  color: var(--yellow);
+  border: 1.5px solid #8a6a1c;
+}
+.ib-sev-low {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--faint);
+}
+
+/* Extension beyond the mockup (which only needed the four severity levels):
+ * the generic <Badge> needs an info/ok tone for non-severity states. Same
+ * geometry, same two remaining semantic hues, no new colors introduced. */
+.ib-sev-info {
+  background: transparent;
+  color: var(--blue);
+  border: 1.5px solid #2f5c8f;
+}
+.ib-sev-ok {
+  background: transparent;
+  color: var(--green);
+  border: 1.5px solid #2c6b3f;
+}
+
+.ib-dom {
+  font-size: 11px;
+  color: var(--text);
+}
+.ib-dom::before {
+  content: "◆ ";
+  font-size: 8px;
+  vertical-align: 1px;
+  color: var(--muted);
+}
+
+.ib-gauge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ib-gauge .ib-bar {
+  width: 60px;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.ib-gauge .ib-bar i {
+  display: block;
+  height: 100%;
+}
+.ib-g-crit i {
+  background: var(--red);
+}
+.ib-g-high i {
+  background: var(--red-mid);
+}
+.ib-g-med i {
+  background: var(--yellow);
+}
+.ib-g-low i {
+  background: var(--faint);
+}
+
+/* ------------------------------------------------------------- Status bar */
+
+.ib-statusbar {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--raised);
+  border-top: 1px solid var(--border);
+  padding: 6px 14px;
+  font-family: var(--ib-mono);
+}
+.ib-statusbar .ib-sb-ok::before {
+  content: "●";
+  color: var(--green);
+  margin-right: 5px;
+  font-size: 8px;
+}
+.ib-statusbar .ib-sb-right {
+  margin-left: auto;
+}

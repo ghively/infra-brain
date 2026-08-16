@@ -1,0 +1,95 @@
+# k8s/scheduler.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler
+  namespace: infra-brain
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: scheduler
+  template:
+    metadata:
+      labels:
+        app: scheduler
+    spec:
+      initContainers:
+        - name: bws-bootstrap
+          image: ${CI_REGISTRY_IMAGE:-infra-brain}:${IMAGE_TAG:-latest}
+          command: ["/bin/bash", "scripts/bws_bootstrap.sh"]
+          env:
+            - name: BWS_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bws-access-token
+                  key: BWS_ACCESS_TOKEN
+            - name: SECRETS_OUT
+              value: /run/secrets/env
+          volumeMounts:
+            - name: secrets-vol
+              mountPath: /run/secrets
+      containers:
+        - name: scheduler
+          image: ${CI_REGISTRY_IMAGE:-infra-brain}:${IMAGE_TAG:-latest}
+          command:
+            - /bin/bash
+            - -c
+            - "source /run/secrets/env && infra-brain-scheduler"
+          envFrom:
+            - configMapRef:
+                name: infra-brain-config
+          volumeMounts:
+            - name: secrets-vol
+              mountPath: /run/secrets
+          # TRK-009 parity: mirrors the compose scheduler service's deadman
+          # healthcheck (docker/docker-compose.yml:206-211) — the scheduler has
+          # no HTTP server (unlike agent-core.yaml's FastAPI app), so this uses
+          # an exec probe against the same DB-heartbeat check instead of
+          # httpGet /healthz+/health. A hung APScheduler thread with a stale
+          # heartbeat now restarts the pod instead of running undetected.
+          startupProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - "source /run/secrets/env && python -c \"from infra_brain.callbacks.freshness import check_scheduler_deadman as c; import sys; sys.exit(1 if c() else 0)\""
+            # Compose's start_period=5400s (90 min, covers the full-scope
+            # graph_maintenance convergence run) — periodSeconds * failureThreshold
+            # must cover the same window before liveness starts counting failures.
+            periodSeconds: 300
+            failureThreshold: 18
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - "source /run/secrets/env && python -c \"from infra_brain.callbacks.freshness import check_scheduler_deadman as c; import sys; sys.exit(1 if c() else 0)\""
+            periodSeconds: 300
+            timeoutSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - "source /run/secrets/env && python -c \"from infra_brain.callbacks.freshness import check_scheduler_deadman as c; import sys; sys.exit(1 if c() else 0)\""
+            periodSeconds: 300
+            timeoutSeconds: 15
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              # TRK-108: keep in lockstep with the compose scheduler mem_limit
+              # (2g) — the full-scope graph_maintenance convergence run needs
+              # the headroom as the fleet's edge count grows.
+              memory: "2Gi"
+              cpu: "500m"
+      terminationGracePeriodSeconds: 120
+      volumes:
+        - name: secrets-vol
+          emptyDir: {}

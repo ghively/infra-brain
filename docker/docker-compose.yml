@@ -1,0 +1,380 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-infra_brain}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-infra_brain}"]
+      interval: 5s
+      retries: 5
+    restart: unless-stopped
+    mem_limit: 2g
+    cpus: 2.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Loopback-ONLY publish for the host-networked `scheduler` service (see the
+    # long note there): scheduler runs with network_mode:host for netdiscovery
+    # LAN visibility, which takes it off the compose `backend` network, so it
+    # can no longer resolve/reach `postgres:5432` — it connects to
+    # 127.0.0.1:15432 instead. The 127.0.0.1 bind keeps this OFF the LAN (the
+    # "base file publishes no internal ports" rule below is about external
+    # exposure/collisions; a loopback bind exposes nothing externally). Port
+    # 15432 (not 5433) deliberately avoids the shared host's possible other
+    # postgres on 5433 and the dev overlay's 5433 publish.
+    ports:
+      - "127.0.0.1:15432:5432"
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Loopback-ONLY publish for the host-networked `scheduler` (see postgres
+    # ports note above / the scheduler service note). 16379 avoids the dev
+    # overlay's 6379 publish and any host-local redis on the default port.
+    ports:
+      - "127.0.0.1:16379:6379"
+    networks:
+      - backend
+
+  n8n:
+    image: n8nio/n8n:1.88.0
+    environment:
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: admin
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5678/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # n8n has no dependency on postgres/redis in this stack — isolated on its own
+    # network (segmentation fix; it previously shared the flat default network).
+    networks:
+      - n8n_net
+
+  migrate:
+    image: ${CI_REGISTRY_IMAGE:-infra-brain}:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: alembic upgrade head
+    # env_file parity with app/scheduler/mcp. Without it, an unresolved
+    # DATABASE_URL at compose-interpolation time left POSTGRES_URL empty and
+    # alembic "upgraded" a throwaway localhost DB while the live volume stayed
+    # unmigrated — the schema-drift 500. POSTGRES_URL below still wins (explicit
+    # environment overrides env_file), but the .env guarantees the value is set.
+    env_file: ../.env
+    environment:
+      POSTGRES_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 1g
+    cpus: 1.0
+    networks:
+      - backend
+
+  seed:
+    image: ${CI_REGISTRY_IMAGE:-infra-brain}:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: python scripts/seed_db.py
+    env_file: ../.env
+    environment:
+      POSTGRES_URL: ${DATABASE_URL}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    mem_limit: 512m
+    cpus: 0.5
+    networks:
+      - backend
+
+  app:
+    image: ${CI_REGISTRY_IMAGE:-infra-brain}:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    env_file:
+      - ../.env
+      # Host-only collector creds (vSphere/Octopus/…): not in git, CI, or
+      # Bitwarden. Loaded AFTER ../.env so it supplements/overrides.
+      # required:false → a missing file never breaks the deploy.
+      - path: /opt/infra-brain/collector-secrets.env
+        required: false
+    environment:
+      POSTGRES_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      BWS_ACCESS_TOKEN: ${BWS_ACCESS_TOKEN}
+      # Signs dashboard session cookies. No default: a real value MUST be provided
+      # via .env, else the app fails closed at startup (assert_cookie_secret_ok).
+      # For local/dev, set INFRA_BRAIN_DEV=1 to keep the open path.
+      UI_COOKIE_SECRET: ${UI_COOKIE_SECRET}
+      INFRA_BRAIN_DEV: ${INFRA_BRAIN_DEV:-false}
+      # F23: deployment environment guard. Defaults to development so local
+      # compose (which may set INFRA_BRAIN_DEV=1) boots; a CI deploy sets
+      # ENVIRONMENT=deployed ("production" is a legacy alias) so the app
+      # REFUSES to start if INFRA_BRAIN_DEV is also truthy.
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      # F18: the dedicated `scheduler` service below owns all cron jobs — keep
+      # the embedded scheduler OFF in the API process (default false). Enabling
+      # it here would double-run every unlocked job.
+      EMBEDDED_SCHEDULER_ENABLED: ${EMBEDDED_SCHEDULER_ENABLED:-false}
+      # Secure attribute on session cookies. Default true for HTTPS deployments.
+      # Set COOKIE_SECURE=false (CI variable) for HTTP-only lab/dev stacks.
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+    volumes:
+      - ${SSH_KEY_PATH:-/dev/null}:/app/.ssh/id_ed25519:ro
+      - /opt/infra-brain/repos:/opt/infra-brain/repos:ro
+    ports:
+      - "8001:8000"
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/healthz').status==200 else sys.exit(1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    mem_limit: 2g
+    cpus: 2.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Lets the container reach host-run services (e.g. a host Ollama on
+    # :11434 used when LLM_PROVIDER=openai + OPENAI_BASE_URL=host.docker.internal).
+    # Without this, "localhost" inside this bridge-networked container is the
+    # container itself → Connection refused for host services.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - backend
+
+  scheduler:
+    image: ${CI_REGISTRY_IMAGE:-infra-brain}:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    # F-002: use the console script (pyproject [project.scripts]) so the
+    # container runs run_scheduler_forever() — which configures stdout logging
+    # and calls load_secrets_into_env() + init_tracing(). The old inline
+    # python -c skipped all three (zero `docker logs` output).
+    command: infra-brain-scheduler
+    # HOST NETWORKING — scheduler only, deliberately unlike its siblings.
+    # netdiscovery's nmap Tier-1 sweep runs in this container; on the bridge
+    # network it can only see 172.26.0.0/16 (confirmed via `ip route` in the
+    # container), so it literally cannot scan the real corporate LAN. Host
+    # network mode gives it the host's real interfaces/routes. Consequences
+    # handled below:
+    #   * the container leaves ALL compose networks (Compose forbids
+    #     network_mode + networks together), so `postgres`/`redis` service-name
+    #     DNS no longer resolves — POSTGRES_URL/REDIS_URL therefore point at
+    #     the loopback-only host publishes added on the postgres/redis
+    #     services (127.0.0.1:15432 / 127.0.0.1:16379) instead of ${DATABASE_URL}'s
+    #     service-name form used by every other service.
+    #   * depends_on still works — it gates on container health/exit status via
+    #     the engine, not network reachability.
+    #   * the healthcheck below is NOT purely local: check_scheduler_deadman
+    #     reads the DB via get_session(), i.e. through this same 127.0.0.1
+    #     POSTGRES_URL — if the loopback publish is missing, the healthcheck
+    #     (and the whole scheduler) fails.
+    # The scheduler listens on no ports itself (pure APScheduler daemon), so
+    # host mode adds no new listening surface.
+    network_mode: host
+    env_file:
+      - ../.env
+      # Host-only collector creds (see app service). required:false → optional.
+      - path: /opt/infra-brain/collector-secrets.env
+        required: false
+    environment:
+      # Host-network override (see network_mode note above): built from the
+      # same POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB vars that provision
+      # the postgres service itself, so no new secret/env var is introduced
+      # and it can never drift from the real credentials. Caveat: a password
+      # containing URL-reserved characters would need percent-encoding here.
+      POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@127.0.0.1:15432/${POSTGRES_DB:-infra_brain}
+      REDIS_URL: redis://127.0.0.1:16379/0
+    volumes:
+      - ${SSH_KEY_PATH:-/dev/null}:/app/.ssh/id_ed25519:ro
+      - /opt/infra-brain/repos:/opt/infra-brain/repos:ro
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"from infra_brain.callbacks.freshness import check_scheduler_deadman as c; import sys; sys.exit(1 if c() else 0)\""]
+      interval: 300s
+      timeout: 15s
+      retries: 3
+      start_period: 5400s
+    # TRK-108: 1g was OOM-killed every 2h by the full-scope graph_maintenance
+    # convergence run (~460k edges). The run is now chunk-buffered (_EdgeBuffer +
+    # emit_edges_batch slicing) so 1g should again suffice, but 2g gives headroom
+    # for fleet growth — the edge count scales with inventory size.
+    mem_limit: 2g
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Kept under network_mode:host so OPENAI_BASE_URL=http://host.docker.internal:11434
+    # in .env keeps working unchanged for the scheduled reasoner sweeps
+    # (discovery, coverage, rootcause, …). It's technically redundant now —
+    # host-networked, 127.0.0.1:11434 would also reach host-run Ollama — but
+    # /etc/hosts is still per-container in host net mode, host-gateway still
+    # resolves (to the docker0 gateway, a host-local address), and removing it
+    # would force a coordinated .env edit. Harmless; leave it.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mcp:
+    image: ${CI_REGISTRY_IMAGE:-infra-brain}:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: python -m infra_brain.mcp_server
+    # Auth overhaul (spec Part 1): bind on the real interface so infra-ops can
+    # reach MCP across LAN subnets. Access control is now per-key scoped auth
+    # (mcp_auth + mcp_api_keys), NOT loopback binding. Subnet segmentation is the
+    # network's job, not this app's (no app-level CIDR allowlist by decision).
+    ports:
+      - "8002:8002"
+    env_file:
+      - ../.env
+      # Host-only collector creds (see app service). required:false → optional.
+      - path: /opt/infra-brain/collector-secrets.env
+        required: false
+    environment:
+      POSTGRES_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      INFRA_BRAIN_DEV: ${INFRA_BRAIN_DEV:-false}
+      # F23: same hardened-env guard as the app — dev-mode (no MCP auth) must never
+      # run when ENVIRONMENT=deployed (or the legacy alias "production").
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      INFRA_BRAIN_MCP_ENABLE_MUTATIONS: ${INFRA_BRAIN_MCP_ENABLE_MUTATIONS:-}
+    volumes:
+      # .env mounted READ-ONLY: nothing in the MCP container rewrites secrets now
+      # (set_secret/update_config removed). No docker.sock: restart-orchestration
+      # tools were removed, so the container needs no host control.
+      - ../.env:/app/infra-brain.env:ro
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    # TRK-258(1): mcp_server now exposes a dedicated no-auth /healthz (mirrors
+    # main app's zero-I/O liveness probe — see mcp_metrics.healthz_endpoint,
+    # exempted from _ApiKeyAuthMiddleware by path). Previously this probed the
+    # auth-gated /mcp endpoint, which returned 401 on every single check —
+    # 972+ harmless 401 log entries burying any real 401 (TRK-250) in noise.
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8002/healthz', timeout=5).status==200 else sys.exit(1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    mem_limit: 1g
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Reach host-run Ollama (:11434) for chat LLM calls when LLM_PROVIDER=openai.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - backend
+
+  deadman-prober:
+    # Standalone dead-man prober (Phase 4 OB-1 external prober). Bypasses the
+    # write-gate layer BY DESIGN — it is outside the app's trust boundary
+    # (never imports infra_brain) and its only outbound writes are synthetic
+    # health strings ({"category": ..., "messages": [...]}) POSTed to the ops
+    # webhook, never real infrastructure data. See docker/deadman-prober/.
+    #
+    # Host-level death (the whole VM/pod going down) is NOT covered here —
+    # this sidecar dies with the host it runs on. That gap is deferred; it
+    # needs an off-host monitor (e.g. an n8n cron elsewhere) — see docs/TRACKER.md.
+    image: ${CI_REGISTRY_IMAGE:-infra-brain}-deadman-prober:${IMAGE_TAG:-latest}
+    build:
+      context: ../docker/deadman-prober
+      dockerfile: Dockerfile
+    environment:
+      APP_URL: http://app:8000
+      OPS_WEBHOOK_URL: ${OPS_WEBHOOK_URL:-}
+      OPS_WEBHOOK_TOKEN: ${OPS_WEBHOOK_TOKEN:-}
+      PROBE_INTERVAL: ${PROBER_PROBE_INTERVAL:-120}
+    depends_on:
+      - app
+    restart: always
+    mem_limit: 128m
+    cpus: 0.25
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - backend
+
+networks:
+  backend:
+    name: infra-brain_backend
+  n8n_net:
+    name: infra-brain_n8n
+
+volumes:
+  postgres_data:
+    # Name is overridable so a deploy can adopt a prior stack's data volume
+    # (set POSTGRES_VOLUME). Defaults to the canonical compose-generated name.
+    name: ${POSTGRES_VOLUME:-infra-brain_postgres_data}
+  redis_data:
+  n8n_data:

@@ -1,0 +1,119 @@
+# k8s/postgres-backup-cronjob.yaml
+#
+# TRK-296: k8s-native Postgres backup story.
+#
+# Decision (the maintainer, 2026-07-30): CronJob running `pg_dump` to a PVC — not a
+# sidecar container, not CSI volume-snapshot. Runs daily at 03:00 (off-peak,
+# outside the scheduler's graph_maintenance convergence window — see
+# k8s/scheduler.yaml's startupProbe comment for that window's timing) and
+# keeps BACKUP_RETENTION_DAYS (default 7) of dumps on the postgres-backup PVC.
+#
+# Restore is a manual operation: `gunzip -c <dump>.sql.gz | psql "$POSTGRES_URL"`
+# (or pg_restore for a custom-format dump) — no automated restore job in scope here.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: infra-brain
+spec:
+  schedule: "0 3 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: postgres-backup
+        spec:
+          restartPolicy: Never
+          initContainers:
+            - name: bws-bootstrap
+              image: ${CI_REGISTRY_IMAGE:-infra-brain}:${IMAGE_TAG:-latest}
+              command: ["/bin/bash", "scripts/bws_bootstrap.sh"]
+              env:
+                - name: BWS_ACCESS_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: bws-access-token
+                      key: BWS_ACCESS_TOKEN
+                - name: SECRETS_OUT
+                  value: /run/secrets/env
+              volumeMounts:
+                - name: secrets-vol
+                  mountPath: /run/secrets
+          containers:
+            - name: pg-dump
+              image: pgvector/pgvector:pg15
+              # POSTGRES_URL comes from /run/secrets/env (same Bitwarden-bootstrap
+              # pattern as postgres.yaml / migration-job.yaml). It is deliberately
+              # NEVER passed as a pg_dump command-line argument — libpq connection
+              # URIs embed the password, and command-line args are readable by any
+              # process in the same pod/container namespace via `ps`. Instead it's
+              # parsed into PGHOST/PGPORT/PGUSER/PGPASSWORD/PGDATABASE env vars,
+              # which pg_dump (via libpq) reads automatically with no connection
+              # arg needed. BACKUP_RETENTION_DAYS controls how many days of dumps
+              # are kept on the PVC; override via the ConfigMap or by editing the
+              # default below.
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -euo pipefail
+                  source /run/secrets/env
+                  # Parse postgresql[+driver]://user:pass@host:port/dbname into
+                  # PG* env vars in pure bash (no python3 dependency in this image).
+                  uri="${POSTGRES_URL#*://}"
+                  userpass="${uri%%@*}"
+                  hostpart="${uri#*@}"
+                  export PGUSER="${userpass%%:*}"
+                  export PGPASSWORD="${userpass#*:}"
+                  hostport="${hostpart%%/*}"
+                  export PGHOST="${hostport%%:*}"
+                  export PGPORT="${hostport##*:}"
+                  [ "$PGPORT" = "$PGHOST" ] && export PGPORT=5432
+                  export PGDATABASE="${hostpart#*/}"
+                  PGDATABASE="${PGDATABASE%%\?*}"
+                  unset POSTGRES_URL uri userpass hostpart hostport
+                  RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-7}"
+                  STAMP="$(date -u +%Y%m%d_%H%M%S)"
+                  OUT="/backups/infra_brain_${STAMP}.sql.gz"
+                  echo "Dumping ${PGDATABASE} to ${OUT} (retention: ${RETENTION_DAYS}d)"
+                  pg_dump | gzip > "${OUT}"
+                  echo "Pruning dumps older than ${RETENTION_DAYS} days"
+                  find /backups -name 'infra_brain_*.sql.gz' -mtime "+${RETENTION_DAYS}" -delete
+                  echo "Backup complete: $(du -h "${OUT}" | cut -f1)"
+              envFrom:
+                - configMapRef:
+                    name: infra-brain-config
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "256Mi"
+                limits:
+                  cpu: "500m"
+                  memory: "1Gi"
+              volumeMounts:
+                - name: secrets-vol
+                  mountPath: /run/secrets
+                - name: backup-vol
+                  mountPath: /backups
+          volumes:
+            - name: secrets-vol
+              emptyDir: {}
+            - name: backup-vol
+              persistentVolumeClaim:
+                claimName: postgres-backup
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backup
+  namespace: infra-brain
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 50Gi
