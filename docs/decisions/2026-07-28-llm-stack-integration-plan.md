@@ -116,9 +116,10 @@ pulling:
 - mem0's `/requests` (memory-access audit log)
 
 — writing into new infra-brain tables. Spend/usage thresholds feed into the **existing**
-`NotificationAgent` escalation pattern (same shape as TRK-241's escalating alerts,
-TRK-230's compliance-violation notifications) rather than a new notification mechanism —
-proactive alerting, not just passive dashboard visibility.
+`NotificationAgent` escalation pattern (the same shape already used for escalating
+alerts and compliance-violation notifications elsewhere in the system) rather than a
+new notification mechanism — proactive alerting, not just passive dashboard
+visibility.
 
 ### Phase 5 — mem0 via MCP, tied to caller identity
 
@@ -216,7 +217,7 @@ three gaps named in Context.
 **Nothing in this document has been built or deployed.** This is a planning artifact
 only; execution is a separate, deliberate future effort. A Claude Code session on
 2026-07-28 evaluated bundling this integration work with that same night's verified
-bugfix batch (TRK-234/236/237/238, MR !236) and **explicitly recommended against it** —
+bugfix batch and **explicitly recommended against it** —
 the two efforts have different risk profiles (a planning/infrastructure-provisioning
 effort with unresolved host/disk and guardrail risks vs. a verified, narrowly-scoped
 bugfix batch) and should stay separate rather than being bundled into one deploy.

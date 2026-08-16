@@ -13,12 +13,12 @@ interrupt-as-wait over DB-backed approval).
 ## Consequences
 - supervisor.dispatch() becomes a thin wrapper; SKIP_HOOK and _post_collection_hook retire.
 - ProposedAction stays the approval source of truth; checkpoints are versioned and sweepable.
-- docs/ARCHITECTURE.md + docs/TRACKER.md become the living docs; five historical sets frozen.
+- docs/ARCHITECTURE.md becomes the living doc; five historical decision/evidence sets frozen.
 
 ## References
-Spec: docs/superpowers/specs/2026-07-11-agent-orchestration-v2.1-design.md
-Frozen predecessor: docs/superpowers/specs/2026-06-30-agent-architecture-v2-design.md
-Evidence: docs/agents/ (frozen), docs/audit/ (frozen)
+Based on a detailed internal design spec (2026-07-11) and its frozen predecessor design
+(2026-06-30). Supporting evidence lives in this repo's frozen historical agent-activity and
+audit records (not included in this public excerpt).
 
 ## Status/Outcome (2026-07-12)
 
@@ -32,8 +32,7 @@ approval) plus LangGraph checkpoint retention. Phase 4 closed observability hygi
 (shared JSON logging, truncation counters, LangSmith cloud-egress default removed),
 stood up a self-hosted Langfuse v3 tracing stack, and added a three-layer dead-man
 architecture (per-domain freshness, in-process scheduler heartbeat, out-of-process
-sidecar prober) plus a sweep dashboard view. See `docs/TRACKER.md` for the full
-finding-by-finding disposition (MRs !130–!151) and `docs/ARCHITECTURE.md`'s
+sidecar prober) plus a sweep dashboard view. See `docs/ARCHITECTURE.md`'s
 "Observability (Phase 4)" section for the tracing/dead-man/logging/truncation detail.
 
 **Flag inventory** (all default `False` — every flag flips independently, none changes
@@ -52,7 +51,7 @@ another flag's behavior):
   environment, confirming no collector regressions vs. the flat `supervisor.dispatch()`
   path it replaces.
 - `rootcause_llm_enabled` / `compliance_gap_finder_enabled` — a real-model
-  structured-output/tool-call smoke run (TRK-077, TRK-078/079); both have only ever been
+  structured-output/tool-call smoke run; both have only ever been
   exercised against a stub (`FakeListChatModel`) in CI.
 - `remediation_interrupt_enabled` — a real (non-`MemorySaver`) Postgres checkpointer and
   a healthy dedicated sync-loop thread (`graph._get_sync_loop`).
@@ -69,5 +68,5 @@ as sync-but-backgrounded instead — `langfuse.langchain.CallbackHandler` joins 
 registry's pre-existing documented sync-handler exception (`ReadOnlyToolValidator`/
 `DLPCallbackHandler`) rather than introducing a new violation class, since its methods
 only enqueue onto Langfuse's own OTel batch processor and never raise into the agent.
-See TRK-084 and `docs/ARCHITECTURE.md`'s "Observability (Phase 4)" section for the full
+See `docs/ARCHITECTURE.md`'s "Observability (Phase 4)" section for the full
 verification.

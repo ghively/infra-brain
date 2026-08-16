@@ -1,11 +1,17 @@
 # Knowledge-Graph Completion — Convergence Nodes & Missing Edges
 
+This document is a running log of additions to infra-brain's knowledge-graph
+vocabulary — new convergence node types and relationship (edge) types added to the
+graph over time, recorded roughly in the order they were designed and built. It
+doubles as a design backlog: the dated sections below track what has shipped, what's
+deliberately deferred, and the reasoning behind the build order.
+
 **Status:** design backlog (2026-07-13). Ranked items 1–7 IMPLEMENTED (code-only)
 2026-07-13 on branch `fix/collector-failures-2026-07-13` — see
 `agents/graph_maintenance.py::_populate_convergence_nodes` and
 `tests/agents/test_graph_convergence_nodes.py`. Live backfill happens on the next
 scheduled `graph_maintenance` pass after merge.
-See TRK-102 (graph audit) and TRK-103 (this catalog). Source: Fable5 live-DB analysis.
+This catalog follows on from an earlier graph audit. Source: Fable5 live-DB analysis.
 
 ## Implementation status (2026-07-13, code-only)
 
@@ -35,9 +41,10 @@ emitters in this repo (the audit doc predates them) — the CI guard confirms no
 are dead.
 
 TODO / DEFERRED (not attempted in this tranche):
-- **Duplicate/forked vSphere node-typing MERGE** (`vm` vs `vsphere_vm`, etc.,
-  TRK-102 CRITICAL-1). A data migration needing its own careful pass; the
-  convergence work above is non-vSphere-node-typed so it does not depend on it.
+- **Duplicate/forked vSphere node-typing MERGE** (`vm` vs `vsphere_vm`, etc. — the
+  top-severity item flagged in the earlier graph audit). A data migration needing its
+  own careful pass; the convergence work above is non-vSphere-node-typed so it does
+  not depend on it.
 - **Blocked-tier nodes** (item 10: NetworkPort, Certificates/CA, Windows
   LocalGroups/users, KB, Kernel/distro) — source tables empty; blocked on
   collectors landing data, not schema.
@@ -82,7 +89,7 @@ Each is a new convergence `Resource` node + edge type emitted in
 - **AnsibleInventoryGroup** — item-8 name-join only (no host FK; out of the
   item-9 tranche).
 
-### Part B — vSphere fork MERGE (TRK-102 CRITICAL-1): RESOLVED
+### Part B — vSphere fork MERGE (the top-severity graph-audit item): RESOLVED
 
 Resolved via an additive `IS_SAME_AS` ghost→live bridge (**no schema migration**).
 New method `_populate_vsphere_fork_bridge` in `graph_maintenance.py` emits
@@ -108,10 +115,11 @@ filters and is out of this tranche.
 
 ## Implementation status (2026-07-17, code-only)
 
-Branch `feat/trk-103-104-convergence-node-tranche` (TRK-103/104). A further
+Branch `feat/kg-convergence-node-tranche-2`. A further
 buildable tranche — every block emitted in
 `agents/graph_maintenance.py::_populate_convergence_nodes`, unit-tested in
-`tests/agents/test_graph_convergence_nodes.py`, bounded emission per TRK-108
+`tests/agents/test_graph_convergence_nodes.py`, bounded emission per the
+edge-buffering convention introduced for large blocks
 (the ~7.4k-edge Octopus VariableName block uses the `_EdgeBuffer`
 flush-every-`chunk` accumulator; the rest are small bounded lists). No
 migration (`relationship_type` is `String(64)`).
@@ -163,7 +171,7 @@ guards pass).
 - **project → library_variable_set DEPENDS_ON** — no column linking a project to
   the library variable sets it includes.
 
-Branch `feat/trk-104-has-schedule-convergence-edge` — merged@`b16d41e` (MR !186).
+Branch `feat/kg-has-schedule-convergence-edge` — merged at `b16d41e`.
 
 ### CI pipeline schedule — NOW BUILT
 
@@ -217,7 +225,7 @@ node** that many resources link to. Bidirectional traversal already works
 **J. Cross-domain identity:** IS_SAME_AS(✅ 3,704; host_identities 8 sources) — extend to netdiscovery via IP/Subnet nodes.
 
 ## Warnings / prerequisites
-- **Duplicate vSphere node typing** (`vm` 841 vs `vsphere_vm` 827, etc. — the forked-graph issue, TRK-102) must be merged/regrained BEFORE adding edges, or every convergence node doubles its edges.
+- **Duplicate vSphere node typing** (`vm` 841 vs `vsphere_vm` 827, etc. — the forked-graph issue flagged in the earlier graph audit) must be merged/regrained BEFORE adding edges, or every convergence node doubles its edges.
 - **Dedup/canonical-key policy** needed — `Resource` isn't unique-constrained on (domain,type,name); high-fan-in nodes ("Administrator", port 443) will dominate `get_neighborhood` walks (mind the max_nodes/max_edges caps).
 - **CI guard:** new RelationshipType values must be added to `RELATIONSHIP_PROPS` / `tests/test_declared_vs_emitted_edges.py` or the declared-vs-emitted gate fails.
 - `net_discovery_services` empty → the port pivot is blocked on the Tier-2 persist path, not schema.

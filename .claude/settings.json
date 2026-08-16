@@ -91,15 +91,6 @@
             "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/openui-sync-guard.py"
           }
         ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/tracker-archive-sync.py"
-          }
-        ]
       }
     ],
     "PreToolUse": [

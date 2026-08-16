@@ -2,7 +2,7 @@
 
 - **Date:** 2026-07-04
 - **Status:** ACCEPTED
-- **Roadmap item:** Wave 6 / 6.1 (`docs/audit/ROADMAP.md`)
+- **Roadmap item:** Wave 6 / 6.1
 - **Findings:** F-011 (SRI hash brittleness), F-023 (renderVals blast radius / silent-empty fetch layer)
 - **Decider:** A. Operator (youruser@example.com)
 
@@ -10,7 +10,7 @@
 
 **MIGRATE-TO-VITE-REACT**
 
-## Metrics (per docs/audit/implementation/wave-6-plan.md Part 1 Step 2)
+## Metrics (from the Wave 6 migration-decision rules, Part 1 Step 2)
 
 | Metric | Value | Rule threshold |
 |---|---|---|
@@ -22,14 +22,14 @@
 
 ## Rule applied
 
-Rule 3 of wave-6-plan.md Part 1 Step 3 matched first (M1 ≥ 3). Rule 4 (M4 ≥ 5) and the M5 = NO
+Rule 3 of the migration-decision rules (Part 1 Step 3) matched first (M1 ≥ 3). Rule 4 (M4 ≥ 5) and the M5 = NO
 exclusion of SERVER-RENDER both independently corroborate the same outcome.
 
 ## Consequences
 
 The dashboard will be rebuilt as dashboard-app/ (Vite + React + TypeScript), ported
-page-by-page behind /dashboard2 per Part 3 of docs/audit/implementation/wave-6-plan.md
-(sub-items B1–B7, one MR each). On completion of B7 the DC framework, design_sync
+page-by-page behind /dashboard2 per the Wave 6 migration plan, Part 3
+(sub-items B1–B7, one merge each). On completion of B7 the DC framework, design_sync
 pipeline, vendored blobs, and SRI test machinery are deleted — F-011 and the F-023
 structural risk cease to exist by construction.
 
@@ -50,8 +50,8 @@ fonts — a visual divergence from legacy that was not intentional.
 
 **Decision:** Re-vendor DM Sans and DM Mono locally into `dashboard-app/src/assets/fonts/`
 (woff2 files, same source as legacy) with `@font-face` declarations in `index.css` and a
-matching font-family stack on `body`. Implemented in MR !114 / branch
-`fix/dashboard2-vendor-webfonts` (included in the consolidation MR !124). External CDN font
+matching font-family stack on `body`. Implemented on branch
+`fix/dashboard2-vendor-webfonts` (folded into the dashboard2 consolidation work). External CDN font
 origins remain prohibited — the CSP and offline posture are unchanged; local vendoring only,
 through the Vite asset pipeline (content-hashed, no runtime network fetch).
 
@@ -79,14 +79,13 @@ would undo intentional UX work.
 
 > **Re-verified 2026-07-13:** still pending — `main.py` redirects `/` → `/dashboard`
 > (legacy remains the default) and the legacy static tree / `dashboard_api.py` shim
-> still exist, confirming B7 (MR !123) has not merged. Live migration status is
-> tracked in `docs/audit/ROADMAP.md` Wave 6.1 and `docs/TRACKER.md`; this addendum
-> records the point-in-time decision only.
+> still exist, confirming B7 has not merged. This addendum records the
+> point-in-time decision only; see the final status below.
 
-**Status: MR authored; pending merge. BLOCKED on MR !124 first.**
+**Status: change authored; pending merge. Blocked on the dashboard2 consolidation work landing first.**
 
-Branch `chore/retire-legacy-dashboard-b7` (MR !123) implements the B7 retirement per
-`docs/audit/implementation/wave-6-plan.md` Part 3. Once merged it will delete:
+Branch `chore/retire-legacy-dashboard-b7` implements the B7 retirement per
+the Wave 6 migration plan, Part 3. Once merged it will delete:
 
 - `dashboard/src/` (shell.dc.html + 29 DC-framework page sources)
 - `scripts/design_sync/` build pipeline (all except `check_no_external_origins.py` + `__init__.py`)
@@ -103,15 +102,16 @@ Retained and updated:
 **F-011 closed on merge:** no SRI hash literals will remain anywhere in the codebase.
 **F-023 closed on merge:** `renderVals` monolith does not exist in the Vite+React replacement; every page is wrapped in `PageBoundary`.
 
-**DO NOT MERGE !123** until:
-1. MR !124 (`feat/dashboard2-full-consolidated`) is merged to master AND verified working
+**DO NOT MERGE** the B7 branch until:
+1. The `feat/dashboard2-full-consolidated` branch is merged to master AND verified working
    in the deployed container.
 2. The B6 soak period (≥ 1 week of side-by-side use, maintainer sign-off per
-   `wave-6-plan.md:768-769`) has completed. This soak clock cannot start until !124 is live.
+   the Wave 6 migration plan) has completed. This soak clock cannot start until that
+   branch is live.
 
-**Rebase note:** The !123 branch was cut from master before the visual-parity addendum
-(above) landed. After !124 merges, rebase !123 onto master so the two addenda are
-contiguous in this file and there is no merge conflict.
+**Rebase note:** The B7 branch was cut from master before the visual-parity addendum
+(above) landed. After the consolidation branch merges, rebase B7 onto master so the two
+addenda are contiguous in this file and there is no merge conflict.
 
 ---
 
@@ -143,4 +143,4 @@ are gone. Only `scripts/design_sync/check_no_external_origins.py` remains, now s
 `src/infra_brain/dashboard/static2/`) is now the **sole UI**; `main.py` redirects
 `/` → `/dashboard2`. The earlier "DO NOT MERGE" gates and side-by-side soak provisions in
 the B6 addendum above are historical — they have been satisfied and superseded by this
-completion. Tracked as TRK-105 in `docs/TRACKER.md`.
+completion.

@@ -17,7 +17,7 @@ just hits the same wall).
 Switched instead to a local Ollama instance (gpu-host, mxbai-embed-large)
 which natively emits exactly 1024 dims -- no truncation needed, and no
 external rate limit at all (local inference). This migration reverts to
-the ORIGINAL TRK-067 dimension, which mxbai-embed-large was specifically
+the ORIGINAL RAG knowledge-store dimension, which mxbai-embed-large was specifically
 chosen to match.
 
 document_chunks is empty in every environment (confirmed again at this

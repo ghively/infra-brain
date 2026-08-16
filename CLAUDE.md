@@ -34,11 +34,8 @@ the decomposition and dispatches specialist `Agent()` calls **itself**, in paral
 batches, directly from wherever it's running (almost always the top-level session).
 
 **Why not a subagent:** subagents in this harness have **no `Agent`/`Task` tool
-available to themselves** (confirmed empirically — a probe subagent's own tool list
-came back with no `Agent`/`Task`). The old `Agent(subagent_type="orchestrator", ...)`
-pattern is gone — that agent definition has been retired, because it could never
-actually do its documented job (fan out to specialists) once spawned as a subagent;
-it silently degraded to serial self-work with every specialist review step skipped.
+available to themselves**, so a spawned "orchestrator" could never actually fan out
+to specialists — it silently degraded to serial self-work instead.
 **Never call `Agent(subagent_type="orchestrator")` — that type no longer exists.**
 
 **When to invoke the orchestrator skill:**
@@ -241,12 +238,13 @@ Once connected, Claude can query `collection_runs`, `drift_events`, `resources`,
    ORM query in `agents/`/`etl/`**, replicate all four gates locally with
    **`/pg-gate-check`** (`bash .claude/skills/pg-gate-check/run.sh`; add
    `PG_GATE_SKIP_ORM=1` for the fast schema-only loop). Reviewer approval does not
-   substitute — all three reviewers approved the 2026-07-21 MR !195 failure.
-   `agent-orm-check` (TRK-356) is the fourth gate: `PG_GATE_DSN` flips
+   substitute — this exact gap once passed full review before failing live.
+   `agent-orm-check` is the fourth gate: `PG_GATE_DSN` flips
    `tests/support/pg.py::make_engine` from in-memory sqlite to real PostgreSQL so
    `tests/agents` + `tests/etl` execute their ORM constructs on the real dialect —
-   added after TRK-350's `IN (SELECT (SELECT …))` passed 5,215 green tests and
-   raised `CardinalityViolation` on the first live drift run.
+   added after a nested `IN (SELECT (SELECT …))` query passed 5,215 green tests on
+   sqlite and raised `CardinalityViolation` on the first live drift run against
+   real Postgres.
 6. **New domain agents need a test file** — the test must cover at least: success case,
    empty result, exception. Use `/agent-scaffold` to get both files at once.
 7. **The `.env` file must never be edited by Claude** — it contains secrets. Edit
@@ -300,46 +298,14 @@ Once connected, Claude can query `collection_runs`, `drift_events`, `resources`,
 | `/onboard` | infra-brain onboarding: safety model, agent architecture (`AGENT_REGISTRY`), critical constraints, first contribution guide |
 
 ### LangChain Lab Skills (bundled — always available)
-| Skill | What it does |
-|---|---|
-| `/lc-start` | Full onboarding for new LangChain projects — goal, scaffold, first run, LangSmith |
-| `/lc-agent` | ReAct, Supervisor, Plan-and-Execute, Reflection, Send API patterns |
-| `/lc-graph` | StateGraph, nodes, edges, checkpointing, interrupts, streaming, subgraphs |
-| `/lc-rag` | 8 RAG variants: naive, multi-query, compression, self-RAG, CRAG, agentic |
-| `/lc-memory` | Buffer, summary, checkpointing, vector memory, entity, Store API |
-| `/lc-tools` | @tool, StructuredTool, async tools, ToolNode, toolkits, MCP |
-| `/lc-lcel` | Runnable interface, pipe composition, branching, streaming, retry/fallback |
-| `/lc-deploy` | Local dev, LangGraph Platform, Docker, Kubernetes deployment |
-| `/lc-test` | Unit, state, integration tests; LangSmith eval; CI/CD integration |
-| `/lc-debug` | Structured triage for all LangChain/LangGraph error categories |
-| `/lc-monitor` | LangSmith setup, tracing, dashboards, online eval, Prompt Hub |
-| `/lc-guardrails` | Prompt injection, PII protection, cost circuit breaker, HITL |
-| `/lc-resilience` | Retry with jitter, fallback chains, circuit breaker, connection pooling |
-| `/lc-compliance` | GDPR, HIPAA, EU AI Act patterns |
-| `/lc-audit` | Immutable audit tables, cryptographic hash chains, compliance views |
-| `/lc-providers` | Configure/swap LLM providers: Anthropic, OpenAI, Azure, Bedrock, Gemini, Ollama |
-| `/lc-ui` | Streamlit, Chainlit, Gradio, FastAPI+HTMX streaming UI patterns |
-| `/lc-data` | Text-to-SQL, Pandas agent, OpenAPI agent, multi-source data agents |
-| `/lc-vectorstore` | pgvector, Chroma, Pinecone, embeddings, hybrid search, multi-tenant |
-| `/lc-multimodal` | Image analysis, PDF loaders, table extraction, audio, multimodal RAG |
-| `/lc-context-engineer` | Prompt templates, few-shot, structured output, Prompt Hub |
-| `/lc-patterns` | Recommend the right pattern for your use case |
-| `/lc-explain <concept>` | Explain any LangChain/LangGraph concept with code + analogies |
-| `/lc-docs <topic>` | Fetch live documentation via Context7 |
-| `/lc-review [file]` | Review LangChain code across 5 dimensions |
-| `/lc-scaffold [type]` | Scaffold project/agent/graph/RAG/tool/chain/evaluator files |
-| `/lc-trace <file>` | Inject LangSmith tracing into an existing Python file |
-| `/lc-guard [path]` | Audit for 8 security gaps; generate guardrails layer |
-| `/lc-erase <user_id>` | GDPR Article 17 right-to-erasure workflow |
-| `/lc-antipatterns` | Catalog of 15 LangChain antipatterns with fixes |
-| `/lc-architect` | Deep architecture spec — invoked when design decisions exceed a single skill's pattern heuristics; outputs a self-contained architecture doc, no code |
-| `/lc-coder` | Specialist code-generation — produces complete production-quality LangChain/LangGraph files, not snippets |
-| `/lc-reviewer` | Seven-dimension LangChain/LangGraph code review with file:line findings; used by `/lc-review` and as a pre-merge gate |
-| `/context-engineer` | Prompt templates, system-prompt authorship, few-shot, structured output, context-window management, output parsers |
-| `/design-system` | Structured technical interview → LangChain/LangGraph architecture spec doc (`docs/specs/`); no code written |
-| `/graph` | LangGraph StateGraph design: state, nodes, edges, checkpointing, interrupts, streaming, subgraphs, Send |
-| `/rag` | Scaffold the right RAG pattern — naive through Self-RAG/Agentic RAG on LangGraph |
-| `/start` | langchain-lab plugin onboarding for complete beginners — scaffold, hello-world, LangSmith setup |
+
+~36 additional skills covering the general LangChain/LangGraph authoring surface —
+agent patterns, RAG variants, graph design, testing, deployment, guardrails,
+compliance, provider configuration, and more (`/lc-agent`, `/lc-rag`, `/lc-graph`,
+`/lc-guard`, `/lc-test`, `/lc-deploy`, …). This is a reusable, project-agnostic
+toolkit bundled alongside the infra-brain-specific skills above, not something
+written for this project — see `.claude/PLUGIN_SPEC.md` for the full list and
+design rationale, or `.claude/skills/` directly.
 
 ## Available Subagents
 

@@ -262,7 +262,7 @@ class Document(Base):
     sensitivity: Mapped[str] = mapped_column(String(32), default="internal")
     source: Mapped[str] = mapped_column(String(512))
     indexed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
-    # Provenance + incremental re-index columns (TRK-067 RAG revival). All
+    # Provenance + incremental re-index columns (RAG knowledge-store revival). All
     # nullable so existing rows are unaffected; used to skip-unchanged pages,
     # track Confluence source versions, and mark rows "stale" (never delete)
     # when a source page disappears.

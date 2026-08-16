@@ -9,8 +9,8 @@
 5. [Enabling Optional Features](#enabling-optional-features)
 6. [Troubleshooting / FAQ](#troubleshooting--faq)
 
-See also: [MCP Server Reference](MCP_SERVER.md) — full tool reference for the
-Claude Code / infra-ops integration.
+See also: [MCP Server Reference](MCP_SERVER.md) — full tool reference for any
+MCP-compatible client integration (e.g. Claude Code).
 
 ---
 
@@ -50,9 +50,9 @@ kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/postgres.yaml
 kubectl apply -f k8s/redis.yaml
 kubectl apply -f k8s/migration-job.yaml   # wait for Completed before proceeding
-kubectl apply -f k8s/agent-core.yaml
+kubectl apply -f k8s/agent-core.yaml      # serves the API and /dashboard2 dashboard on the same pod
 kubectl apply -f k8s/scheduler.yaml
-kubectl apply -f k8s/ui-deployment.yaml
+kubectl apply -f k8s/postgres-backup-cronjob.yaml   # optional — scheduled Postgres backups
 ```
 
 Migration **must complete** before the app or scheduler start. The init container
@@ -90,7 +90,7 @@ For local development, put secrets directly in `.env`.
 | `OCTOPUS_URL` | `""` | No | Octopus server URL |
 | `OCTOPUS_API_KEY` | `""` | Yes (BWS) | Octopus API key |
 | `OCTOPUS_SSL_VERIFY` | `true` | No | Verify TLS for Octopus API calls |
-| **SaaS / API-key inventory (GitLab #103)** | | | |
+| **SaaS / API-key inventory** | | | |
 | `SAAS_ADMIN_URL` | `""` | No | SaaS admin/management API base URL — empty means the collector is a clean no-op |
 | `SAAS_ADMIN_TOKEN` | `""` | Yes (BWS), if enabled | SaaS admin API token |
 | `SAAS_VENDOR` | `""` | No | Optional label for the configured admin API |
@@ -123,14 +123,14 @@ For local development, put secrets directly in `.env`.
 | **Context7** | | | |
 | `CONTEXT7_API_KEY` | `""` | Yes (BWS) | Context7 documentation API key |
 | **Paths** | | | |
-| `INFRA_OPS_ROOT` | `C:\path\to\infra-ops` | No | Root of the infra-ops source repo (used by IaC reader) |
+| `INFRA_OPS_ROOT` | `C:\path\to\infra-ops` | No | Root of the IaC source repo used by the IaC reader (e.g. an Ansible playbook repo such as infra-ops) |
 | **API Tunables** | | | |
 | `API_PAGE_SIZE` | `100` | No | Page size for paginated API requests |
 | `API_TIMEOUT_SECONDS` | `30` | No | Per-request HTTP timeout in seconds |
 | `API_MAX_RETRIES` | `3` | No | Max retry attempts for transient HTTP errors |
 | **MCP Server** | | | |
-| `INFRA_BRAIN_MCP_TOKEN` | `""` | Yes | Bearer token for the MCP server. Generate with `python -c "import secrets; print(secrets.token_hex(32))"`. Must also be set in the infra-ops repo's `.env` for infra-ops to connect. |
-| `INFRA_BRAIN_MR_ENABLED` | `false` | No | Set `true` to allow `RemediationAgent` and `InventoryReconcileAgent` to open GitLab MRs. Default `false` — Claude Code / infra-ops opens MRs. |
+| `INFRA_BRAIN_MCP_TOKEN` | `""` | Yes | Bearer token for the MCP server. Generate with `python -c "import secrets; print(secrets.token_hex(32))"`. Must also be set in the connecting MCP client's environment (e.g. an `.env` file, for a client such as infra-ops) for that client to connect. |
+| `INFRA_BRAIN_MR_ENABLED` | `false` | No | Set `true` to allow `RemediationAgent` and `InventoryReconcileAgent` to open GitLab MRs. Default `false` — the connecting MCP client (e.g. Claude Code) opens MRs instead. |
 | **Security** | | | |
 | `DLP_FAIL_CLOSED` | `true` | No | Block tool output when DLP detects PAN data |
 | `SCAN_READONLY_ENFORCE` | `true` | No | Enforce read-only tool validator (should stay `true`) |
@@ -150,7 +150,7 @@ For local development, put secrets directly in `.env`.
 | **Operational** | | | |
 | `INFRA_OPS_ENV_MAX_AGE_DAYS` | `30` | No | Max age (days) before a domain snapshot is considered stale |
 | `INFRA_OPS_OBSERVE` | `true` | No | Enable ObservationCallbackHandler (tool-usage recording) |
-| `COLLECTION_DISABLED_DOMAINS` | `""` | No | Comma-separated domain names to skip during scheduled collection without raising an error (e.g. `"vsphere,windows"`). Use for planned maintenance windows. Empty = all domains enabled. (F-022, added MR !95) |
+| `COLLECTION_DISABLED_DOMAINS` | `""` | No | Comma-separated domain names to skip during scheduled collection without raising an error (e.g. `"vsphere,windows"`). Use for planned maintenance windows. Empty = all domains enabled. (F-022) |
 | **Webhook Secrets** | | | |
 | `WEBHOOK_GITLAB_SECRET` | `""` | Yes (BWS) | Shared secret validated against `X-Gitlab-Token` header |
 | `WEBHOOK_OCTOPUS_SECRET` | `""` | Yes (BWS) | Shared secret validated against `X-Octopus-Webhook-Token` header |
@@ -161,7 +161,7 @@ For local development, put secrets directly in `.env`.
 | `LANGSMITH_TRACING` | `false` | No | Enable LangSmith trace export |
 | `LANGSMITH_API_KEY` | `""` | Yes (BWS) | LangSmith API key |
 | `LANGSMITH_PROJECT` | `infra-brain` | No | LangSmith project name |
-| `LANGSMITH_ENDPOINT` | `""` | No | LangSmith ingest endpoint. Default is empty so tracing does **not** silently egress to the public LangSmith cloud — you must set an explicit endpoint (e.g. self-hosted) to opt back in (TRK-042). |
+| `LANGSMITH_ENDPOINT` | `""` | No | LangSmith ingest endpoint. Default is empty so tracing does **not** silently egress to the public LangSmith cloud — you must set an explicit endpoint (e.g. self-hosted) to opt back in. |
 | **Orchestration v2.1 (Phase 2–4 flags — all strictly opt-in)** | | | |
 | `SWEEP_GRAPH_ENABLED` | `false` | No | Route sweeps through the LangGraph `StateGraph` instead of `supervisor.dispatch()`-in-a-loop. `false` = byte-identical per-domain cron behavior. |
 | `SWEEP_GRAPH_SCHEDULE` | `0 */4 * * *` | No | Cron for the single full-sweep job; only registered when `SWEEP_GRAPH_ENABLED=true`. |
@@ -169,7 +169,7 @@ For local development, put secrets directly in `.env`.
 | `ROOTCAUSE_LLM_MAX_EVENTS_PER_RUN` | `20` | No | Per-run cap on LLM reasoning loops; overflow events fall back to the deterministic path. |
 | `COMPLIANCE_GAP_FINDER_ENABLED` | `false` | No | Add an LLM-assisted propose-only rule-gap suggester to `ComplianceAgent`. `false` = only the 4 deterministic rules run. |
 | `REMEDIATION_INTERRUPT_ENABLED` | `false` | No | Park a durable interrupt graph per drafted remediation action. `false` = poll-only approval flow. Requires a real Postgres checkpointer. |
-| `RETENTION_CHECKPOINTS_DAYS` | `30` | No | Age (days) after which stale LangGraph checkpoints are pruned; threads with a pending/approved `ProposedAction` are never pruned (TRK-069). |
+| `RETENTION_CHECKPOINTS_DAYS` | `30` | No | Age (days) after which stale LangGraph checkpoints are pruned; threads with a pending/approved `ProposedAction` are never pruned. |
 | **Langfuse (Phase 4 — self-hosted tracing)** | | | |
 | `LANGFUSE_ENABLED` | `false` | No | Append the Langfuse callback handler to both chains. No-op unless the flag is `true` AND all three settings below are set. |
 | `LANGFUSE_HOST` | `""` | No | Langfuse base URL (e.g. `https://langfuse.internal.example.com`). |
@@ -216,8 +216,9 @@ blocks, running APScheduler in the background.
 
 ### MCP Server (Claude Code Integration)
 
-The MCP server is the integration layer between Infra Brain and Claude Code
-(infra-ops). It runs as the `mcp` Docker Compose service on port **8002**.
+The MCP server is the integration layer between Infra Brain and any
+MCP-compatible client (e.g. Claude Code). It runs as the `mcp` Docker Compose
+service on port **8002**.
 
 ```bash
 # Start (after the app service is healthy)
@@ -371,7 +372,7 @@ LANGSMITH_PROJECT=infra-brain
 LANGSMITH_ENDPOINT=<explicit-endpoint>   # required — default is "" (no cloud egress)
 ```
 
-`LANGSMITH_ENDPOINT` defaults to `""` on purpose (TRK-042): with tracing enabled
+`LANGSMITH_ENDPOINT` defaults to `""` on purpose: with tracing enabled
 but no endpoint set, traces are emitted against an empty endpoint rather than
 silently egressing to the public LangSmith cloud. Set it explicitly — e.g.
 `https://api.smith.langchain.com` for the public cloud, or a self-hosted
@@ -410,16 +411,16 @@ REMEDIATION_INTERRUPT_ENABLED=true
 ```
 
 Prerequisites (from `docs/ARCHITECTURE.md`, "Reasoner-tier LLM features"):
-- `ROOTCAUSE_LLM_ENABLED` — real-model structured-output smoke run (TRK-077).
+- `ROOTCAUSE_LLM_ENABLED` — real-model structured-output smoke run.
 - `COMPLIANCE_GAP_FINDER_ENABLED` — real-model smoke run of the LLM gap-proposal
-  method; confirm `_stable_gap_hash` wording consistency (TRK-078/079).
+  method; confirm `_stable_gap_hash` wording consistency.
 - `REMEDIATION_INTERRUPT_ENABLED` — requires a real (non-`MemorySaver`) Postgres
   checkpointer (`require_postgres_checkpointer()` hard-fails otherwise) and a
   healthy dedicated sync-loop thread.
 
 Related: `RETENTION_CHECKPOINTS_DAYS` (default `30`) controls how long stale
 LangGraph checkpoints are kept before the daily prune job removes them; threads
-with a pending/approved `ProposedAction` are never pruned (TRK-069).
+with a pending/approved `ProposedAction` are never pruned.
 
 ### Langfuse Tracing (Phase 4, self-hosted)
 

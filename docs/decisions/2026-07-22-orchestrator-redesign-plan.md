@@ -5,9 +5,9 @@ implemented and merged — see "Addendum 2026-07-22" below for the adversarial-a
 closeout.
 **Grounding evidence used:** `.claude/agents/orchestrator.md`, `.claude/skills/orchestrator/SKILL.md`,
 `.claude/agents/review-coordinator.md`, CLAUDE.md "How Work Gets Done", `.claude/hooks/`
-listing, git history around merge `42ebc63` (the MR !208 consolidation), file sizes of
-the shared-file hotspots (`docs/TRACKER.md` 170KB, `config.py` 37KB, `.env.example`
-31KB, `AGENTS.md` 2KB/generated).
+listing, git history around merge `42ebc63` (the merge request that consolidated this
+work), file sizes of the shared-file hotspots (the open-findings tracker file 170KB,
+`config.py` 37KB, `.env.example` 31KB, `AGENTS.md` 2KB/generated).
 
 ---
 
@@ -32,7 +32,7 @@ mechanism, and remain the skill's job under either substrate.** Honest breakdown
 |---|---|---|
 | Parallel dispatch, concurrency limits | Yes — `parallel()`, `pipeline()`, auto-capped concurrency. Strictly better than hand-batched `Agent()` calls (pipelining without stage barriers is something manual batching cannot express — a manual "batch" is always a barrier). | Deciding the graph shape at all (decomposition). |
 | Worktree-per-agent (ask 1, first half) | Yes — `agent(prompt, {isolation:'worktree'})` is first-class; auto-removes clean worktrees; returns path + branch. | The *policy* of when to isolate (§2.1 — we deliberately go stricter than Workflow's own "only when they'd conflict" guidance). |
-| **Branch consolidation** (ask 1, second half — "resolve work trees when the agent is finished") | **No.** Workflow hands back N worktree paths and N branches. Merging them into one coherent, testable, pushable result is entirely outside the tool. This is the biggest gap and the core of today's !208 pain. | The full integration procedure in §2.3 — needed identically in both modes. |
+| **Branch consolidation** (ask 1, second half — "resolve work trees when the agent is finished") | **No.** Workflow hands back N worktree paths and N branches. Merging them into one coherent, testable, pushable result is entirely outside the tool. This is the biggest gap and the core of today's manual-consolidation pain. | The full integration procedure in §2.3 — needed identically in both modes. |
 | Per-agent model (ask 2, mechanism) | Yes — `{model, effort}` per call. | The *rubric* for choosing (§3). Workflow's own guidance is "only set model when you're highly confident a different tier fits" — the rubric is precisely the definition of "highly confident." |
 | Cost awareness | Yes — `budget` object. | When to consult it (dispatch-count scaling). |
 | Evidence-gated synthesis, shared-file conventions, routing to project skills/reviewers | No. | All skill. |
@@ -81,13 +81,13 @@ files, with a single explicit override token for exceptions.** Reasoning:
 1. **The costs are asymmetric.** Over-isolation costs ~200–500ms + disk + a
    usually-trivial fast-forward at integration. Under-isolation cost today was branch
    hijacking, file cross-contamination, and a manual `git rebase --onto` +
-   `merge-base --is-ancestor` + hand-resolved TRACKER.md conflict session — and per
+   `merge-base --is-ancestor` + hand-resolved tracker-file conflict session — and per
    audit finding 2 this was a **repeat** of an already-documented incident class. Two
    occurrences of the expensive failure vs. a sub-second premium.
 2. **The selective heuristic requires predicting each agent's file-touch set in
    advance, and that prediction is exactly what failed.** infra-brain tasks that look
    file-disjoint on paper almost all converge on the same shared files in practice —
-   `docs/TRACKER.md` (every task logs a row), `AGENTS.md`, `config.py`/`.env.example`
+   the open-findings tracker file (every task logs a row), `AGENTS.md`, `config.py`/`.env.example`
    (any new flag). In this repo, "would otherwise conflict" evaluates to *true* for
    essentially every pair of code-writing tasks, so the selective heuristic and
    default-on converge — default-on is just the version that doesn't depend on a
@@ -113,14 +113,14 @@ one dirty tree; a clean recorded base is what makes everything in §2.3 mechanic
 Every code-writing dispatch's prompt must include (skill provides the template):
 
 - **Branch naming:** `wt/<batch-slug>/<task-id>-<short-name>` (e.g.
-  `wt/trk-117/T4-phase1-n1`). In Workflow mode, record the branch name it returns
+  `wt/findings-117/T4-phase1-n1`). In Workflow mode, record the branch name it returns
   instead.
 - **Rules:** branch from BASE only; commit locally, small and focused (per existing
   merge policy); **never push, never switch branches, never rebase, never touch files
   outside the worktree**.
-- **Shared-file rule (§2.4):** do NOT edit `docs/TRACKER.md` or `AGENTS.md`; report
-  intended TRACKER row content in the result instead. `config.py`/`.env.example` edits
-  must be additive-only.
+- **Shared-file rule (§2.4):** do NOT edit the open-findings tracker file or `AGENTS.md`;
+  report intended tracker row content in the result instead. `config.py`/`.env.example`
+  edits must be additive-only.
 - **Result contract (proof, not prose):** branch name, tip SHA,
   `git diff --name-only BASE..HEAD` output, and test-command + result line. (This
   extends the existing F-015 evidence rule to worktree outputs.)
@@ -128,7 +128,7 @@ Every code-writing dispatch's prompt must include (skill provides the template):
 ### 2.3 Integration: rolling, integrate-as-they-complete
 
 **Do not wait for all N and then reconcile** — that is exactly the end-state-tangle
-that produced today's manual !208 surgery. Instead, fold each branch in as its agent
+that produced today's manual merge-request surgery. Instead, fold each branch in as its agent
 finishes, while slower agents are still running (integration work hides inside the
 parallel window). Each conflict is then pairwise, small, and fresh — never N-way.
 
@@ -168,17 +168,17 @@ BASE):
    Manual-mode worktrees live in a dedicated git-ignored location outside the repo tree
    (e.g. `../infra-brain.wt/<branch>`), never nested in the repo.
 
-**After the last fold:** full test suite on `integration`, then TRACKER/AGENTS.md
+**After the last fold:** full test suite on `integration`, then tracker-file/AGENTS.md
 updates (§2.4), then rename/merge `integration` into the session's feature branch →
 one MR-gated push per the real merge policy. If any branch touched `db/models/`,
 dialect types, or raw SQL: `/pg-gate-check` before push (existing rule, unchanged).
 
 **Worked example — today's realistic case:** T1 (graph_maintenance perf), T2 (RAG
 hardening), T3 (LLM hardening) all branch from BASE; T1 and T3 would both have edited
-`docs/TRACKER.md`. T2 finishes first → `integration` fast-forwards to T2. T1 finishes →
+the tracker file. T2 finishes first → `integration` fast-forwards to T2. T1 finishes →
 file-intersection with {T2's files} is empty → clean rebase, fold, fast tests. T3
-finishes → intersection with folded set = `{docs/TRACKER.md}` under the old behavior —
-but under the §2.4 rule neither T1 nor T3 edited TRACKER at all; each *reported* its
+finishes → intersection with folded set = `{tracker file}` under the old behavior —
+but under the §2.4 rule neither T1 nor T3 edited the tracker file at all; each *reported* its
 row, and the session writes both rows once at the end. The conflict that took manual
 surgery today simply never exists. Under the old behavior it would have been a
 pairwise append/append conflict resolved by keeping both hunks — annoying but 30
@@ -188,22 +188,22 @@ seconds; under the new convention it's zero.
 
 | File | Rule for parallel subagents | Integration handling |
 |---|---|---|
-| `docs/TRACKER.md` | **Never edited by subagents.** Each reports its row(s)/status-changes as structured text in its result. | Session writes all rows in one commit after the last fold. Removes the single most frequent conflict source (every task writes here; 170KB file, audit item 6's split will help too). |
+| Open-findings tracker file | **Never edited by subagents.** Each reports its row(s)/status-changes as structured text in its result. | Session writes all rows in one commit after the last fold. Removes the single most frequent conflict source (every task writes here; 170KB file, a planned split will help too). |
 | `AGENTS.md` | Never hand-edited by subagents (it is generated from AgentSpec anyway). | Regenerate once on `integration` after all folds. |
 | `src/infra_brain/config.py` / `.env.example` | **Additive-only** in subagents: append new Settings fields / env entries in a clearly-delimited own block; never reorder, rename, or refactor existing entries. Any config *refactor* is a singleton task — never scheduled parallel with anything else touching config. | Append/append conflicts at the same location resolve as keep-both-hunks; then the existing `env-parity-guard` check + `high-blast-radius-test` subset run in the step-5 fast tier catch semantic duplication. |
 | `supervisor.py` AGENT_REGISTRY / `scheduler.py` schedules | Additive-only; each task's decomposition row must declare the registry/schedule entries it will add, so cron-slot collisions are caught **at decomposition time**, not at integration (today's `f385ebf` collision class). | `agent-registry-sync` invariants in the fast tier. |
 | Everything else | Decomposition must declare expected file touches per task. Two tasks declaring the same non-shared file → serialize them or re-cut the boundary. Undeclared overlap discovered at step 2 → resolve pairwise, note it, and tighten the next decomposition. | Standard pairwise resolution. |
 
-Deliberately rejected: `.gitattributes merge=union` on TRACKER.md — union-merge
+Deliberately rejected: `.gitattributes merge=union` on the tracker file — union-merge
 silently keeps both sides of *edits to existing lines* (status changes corrupt into
 duplicates). The report-and-centralize rule is strictly safer and also simpler.
 
-**Confidence:** the git mechanics are exactly the commands that resolved !208 today,
-systematized — high confidence. The "subagents never touch TRACKER" rule is new
-convention; it costs a small prompt-contract addition and eliminates the dominant
-conflict, but depends on agents complying — the step-1 file-list verification is the
-enforcement backstop (a branch touching TRACKER when it declared it wouldn't fails
-verification).
+**Confidence:** the git mechanics are exactly the commands that resolved today's
+merge-request consolidation, systematized — high confidence. The "subagents never
+touch the tracker file" rule is new convention; it costs a small prompt-contract
+addition and eliminates the dominant conflict, but depends on agents complying — the
+step-1 file-list verification is the enforcement backstop (a branch touching the
+tracker file when it declared it wouldn't fails verification).
 
 ---
 
@@ -225,7 +225,7 @@ algorithm for writing an `Agent()`/`agent()` call's `model:` param):
 | 1 | Investigation, root-cause, audit, architecture/design review, any task where the *success criterion itself* must be discovered; output is a diagnosis/decision/report, not a diff | **Fable** | high | Directly evidence-backed: all four of today's Fable assignments. **High confidence.** |
 | 2 | Writes to Critical-Files-table paths or the safety chain (`callbacks/`, `supervisor.py`, `db/models/`, `config.py`, `db/session.py`, `graph.py`), or generates a migration | **Opus** | default | Blast-radius-if-wrong dominates cost; today's Opus implementation work fits here. **High confidence.** |
 | 3 | Code diff with a crisp spec in leaf/isolated scope: one domain agent module, one tool + test, one dashboard `.tsx` component, test-writing against a defined behavior | **Sonnet** | default | This is the "solid but Opus was overkill" bucket the maintainer observed. **Medium confidence — extrapolated, not yet A/B'd; see calibration note.** |
-| 4 | Mechanical, near-zero judgment: run a test/lint command and report, grep/registry/wiring checks, apply a precisely-specified diff, extract exact signatures/strings from named files, draft a TRACKER row from a template | **Haiku** | default | Output is deterministic given the instructions. **Medium confidence.** |
+| 4 | Mechanical, near-zero judgment: run a test/lint command and report, grep/registry/wiring checks, apply a precisely-specified diff, extract exact signatures/strings from named files, draft a tracker row from a template | **Haiku** | default | Output is deterministic given the instructions. **Medium confidence.** |
 | 5 | Read-only research fan-out (`infra-researcher`) | **Sonnet** default; **Haiku** when the ask is pure extraction (rule 4 shape) | default | Pattern-summarization needs some judgment; verbatim fetch doesn't. |
 | 6 | None of the above fires cleanly | **Omit `model:`** (inherit session model) | — | Matches Workflow's own guidance: only set it when confident. The rubric *is* the confidence test; no clean match = no override. |
 
@@ -250,7 +250,7 @@ algorithm for writing an `Agent()`/`agent()` call's `model:` param):
 **Calibration note for the maintainer:** rows 1–2 are evidence-backed today; rows 3–4 are
 reasoned extrapolation. Suggest running rows 3–4 as the default for ~2 weeks, noting
 any tier-mismatch (escalations fired, or Opus used where Sonnet output would clearly
-have sufficed) in HANDOFF day-close entries, then hardening or adjusting the table.
+have sufficed) in day-close session notes, then hardening or adjusting the table.
 Cheap, reversible, produces its own evidence.
 
 ---
@@ -363,11 +363,12 @@ motion, not progress:
 ## Confidence summary
 
 - **High:** the Workflow gap analysis (§1); the integration git mechanics (§2.3 —
-  systematization of commands actually run today for !208); default-on isolation (§2.1
+  systematization of commands actually run today for the manual-consolidation incident);
+  default-on isolation (§2.1
   — asymmetric-cost argument plus a documented repeat incident); rubric rows 1–2 (§3 —
   directly evidence-backed); everything in §5.
 - **Medium:** rubric rows 3–4 (extrapolated — 2-week calibration proposed); the
-  "subagents never edit TRACKER" convention (eliminates the dominant conflict but
+  "subagents never edit the tracker file" convention (eliminates the dominant conflict but
   relies on prompt compliance, backstopped by file-list verification).
 - **Open verification item before implementation:** the audit's tool-list probe
   re-confirming subagents lack `Agent` (2 minutes); and note the fast-tier test

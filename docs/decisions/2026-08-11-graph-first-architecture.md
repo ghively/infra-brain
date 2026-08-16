@@ -1,14 +1,19 @@
 # Graph-First Architecture — collapsing the two edge stores and making graph contribution pluggable
 
-**Status:** PROPOSED — design only, nothing implemented. Written 2026-08-11 at the
-maintainer's request after a vision/implementation gap review.
+**Status:** PROPOSED 2026-08-11, **fully implemented by 2026-08-13.** The original
+design below (§0–§8) is preserved as written; three dated addenda follow it in
+chronological order, recording what actually shipped and where it diverged from
+the sketch. By the third addendum: the old edge store no longer exists, the
+6,367-line hand-maintained deriver is down to under 1,000 lines, and every
+genuine relationship type has a declarative equivalent — see "Addendum
+2026-08-13" at the end for the closing state.
 
 **Grounding evidence** (all measured against the live deployed database and current
-`main`, not inferred): `resources` 3,151 rows · `snapshots` 91,888 · `drift_events` 953 ·
-`resource_relationships` 2,726 · `graph_nodes` 7 · `graph_edges` 0 ·
-`graph_maintenance.py` 6,367 lines · graph layer total 9,864 lines ·
-4 of 52 agent files reference the graph at all · `RelationshipType` 16 entries ·
-19 of 30 collector domains unconfigured.
+`main`, not inferred, as of the original 2026-08-11 proposal): `resources` 3,151 rows ·
+`snapshots` 91,888 · `drift_events` 953 · `resource_relationships` 2,726 ·
+`graph_nodes` 7 · `graph_edges` 0 · `graph_maintenance.py` 6,367 lines · graph layer
+total 9,864 lines · 4 of 52 agent files reference the graph at all ·
+`RelationshipType` 16 entries · 19 of 30 collector domains unconfigured.
 
 ---
 
@@ -274,18 +279,109 @@ plugin contract.
 source risks encoding that source's assumptions into the thing meant to abstract over all
 of them.
 
-> **Provenance note (restored 2026-08-13).** Everything above this line is the
-> ORIGINAL PROPOSED document as written on 2026-08-11. It lived only on the
-> unmerged branch `docs/graph-first-architecture` (commit `a7a8387`) — the
-> addenda below were merged into `main` without it, so for two days this file
-> on `main` consisted of addenda referring to sections (§3.1, §4, the migration
-> path) that were not present. Restored verbatim; the addenda below record what
-> the implementation actually did, and where it diverged from this sketch they
-> are the authority.
+> **Provenance note.** Everything above this line is the ORIGINAL PROPOSED document
+> as written on 2026-08-11. The three addenda below are ordered chronologically and
+> record what the implementation actually did — where they diverge from this sketch,
+> the addenda are the authority.
 
 ---
 
-## Addendum 2026-08-13 — TRK-359 closed: the junction grammar
+## Addendum 1 (2026-08-12, day 1–2) — implementation status after the first two days
+
+P0–P2 are **merged and deployed**; the contract survived contact with reality but not
+unchanged. This section records what actually shipped, because the sketch in §4 is now
+historical.
+
+### What the contract became
+
+| Piece | Shipped form | Why it differs from the sketch |
+|---|---|---|
+| Node source | `NodeSpec(domain, resource_type)` over the generic `resources` table | `source_table=<ORM class>` would have put a domain import back into the contract — the exact thing being removed |
+| Edge types | validated free strings | the central `GraphEdgeType` enum is locked by a test asserting exactly five members, a guard whose purpose is blocking speculative central additions |
+| Direction | `EdgeSpec.direction: {FORWARD, INVERSE}` — `from_node`/`to_node` describe the JOIN, direction decides how the edge is STORED | a one-to-many join is functional from its "many" side by construction; an inverse edge runs the identical join through the byte-for-byte untouched ambiguity index |
+| Child tables | `ChildSpec(key, path, column)` — ordered `(table, fk)` descent resolved via shared SQLAlchemy `MetaData`, never model imports; `NodeSpec.gathers` (values ride onto the parent as a sorted list), `NodeSpec.from_rows` (values become shared, necessarily non-resource-backed nodes), `EdgeSpec.from_key_multi` (many-valued source key, each value still resolved key→one-target) | the join keys for `RUNS_IMAGE`/`ANSIBLE_MANAGES` live in child tables with no `resources` row and no metadata representation |
+
+The engine remains provably domain-ignorant: two AST guard tests (no collector imports,
+no domain/type-name branching) have passed **untouched** through every extension. That is
+the property that keeps this from becoming the next 6,367-line file.
+
+### Relationship migration scoreboard
+
+| Relationship | Status | Note |
+|---|---|---|
+| `RUNS_ON` (service→host) | **declared** (P1) | first cross-collector declaration; hyphen/underscore join via `hostmatch.graph_match_key` |
+| `BELONGS_TO` | **declared** (P2) | keyed on immutable `project_id` after a mutable-name bug was caught pre-ship |
+| `DEFINED_IN` | **declared** | first INVERSE edge; stored as the exact mirror of BELONGS_TO |
+| `RUNS_IMAGE` | **declared** | first child-table declaration; iac owns `ContainerImage` (the compose file naming an image is the source asserting it exists) |
+| `ANSIBLE_MANAGES` | **hand-written, blocked on OWNERSHIP not reach** | the stored edge runs cicd's entity → linux's entity; iac owns only the join rows. Needs a decision: re-anchor the edge on the `AnsibleInventoryFile` iac owns (a different, arguably better edge — but one that fails the equivalence discipline), or widen the ownership rule with a junction-declaration form. Deferred deliberately; do not widen the rule to unblock one edge. |
+
+Every migration used the two-commit equivalence discipline (declaration proven equal to
+the live deriver first, deriver deleted second with the oracle frozen verbatim in a test
+that keeps running). One deliberate divergence is pinned by a test: the old deriver kept
+emitting for retired compose files; the declarative path excludes retired rows.
+
+### Boundaries that remain, pinned executably
+
+*(historical as of this addendum — Addendum 3 below carries the current list; the
+"many-to-many" entry below has since been PARTLY closed: a junction whose rows one
+collector owns is now declarable, while a join functional from neither side with no
+owned junction table remains refused.)*
+
+- **Many-to-many** — a join functional from neither side has no direction to declare it
+  from; needs a junction declaration, refused loudly in both directions today.
+- **Business-key hops** — `ChildSpec` walks PK joins only; `gitlab_projects.gitlab_project_id
+  = iac_files.gitlab_project_id` is deliberately inexpressible (it is what makes the
+  descent grammar safe to resolve generically).
+- **JSON-list child columns** — refused rather than flattened (`ansible_playbook_plays.hosts`).
+
+### Still open after this addendum
+
+P3 (backfill `resource_relationships` → `graph_edges` + drop containment edges), P4/P5
+(retire the old store), edge retirement (needs a "saw the full population" signal),
+`identity_keys` consumption by the resolver, and promoting the two module-local sets that
+landed in `agents/drift.py` (`_DURABLE_RESOURCE_TYPES`, `_EVENT_SHAPED_TYPES`) into
+per-collector declarations.
+
+---
+
+## Addendum 2 (2026-08-12, evening) — P3, P4 and P5 complete: there is one store
+
+The plan below Addendum 1 is **finished**. `resource_relationships` no longer exists;
+`graph_nodes`/`graph_edges` is the only edge store. Execution record:
+
+- **P3**: backfill migration `8965b6329b94` — 101 historical edges recovered live,
+  containment refused by the enumerated `CONTAINMENT_TYPES` allow-list.
+- **P4**: readers re-pointed; live-verified on production.
+- **P5** (branch `feat/p5-graph`): six parallel worktree agents off `316476c`, folded
+  in dependency order:
+  - **Resolver switch**: `graph_phase3.resolve_entities` is the sole identity
+    writer; `host_reconcile`'s IS_SAME_AS emitters deleted after all three coverage gaps
+    were closed red-first (`HOST_NODE_TYPES` +LinuxHost +NetDiscoveredHost,
+    `NodeSpec.is_host_identity` + guard test, shared-IP review-band floor with the
+    routability/3-claimant guards ported from the dying emitter).
+  - **Writer removal**: every `emit_edge`/`emit_edges_batch` call site deleted;
+    `graph_maintenance.py` 6,355 → 986 lines; each deletion carries an epitaph naming its
+    reinstating declaration path. Measured: 2,504 → 0 legacy rows and 406 → 0 minted
+    convergence Resources per maintenance pass, ~2× faster.
+  - **Consumer surface**: legacy routes and `get_neighborhood` gone; chat and
+    the dashboard read `graph_kg` (BFS that runs identically on SQLite and PostgreSQL).
+  - **The drop**: migration `95d988b2bc3c` after a row-by-row derivability
+    audit; `db/relationships.py` is vocabulary + the four canonical absence sets
+    (`DEFERRED` / `MIGRATED_TO_GRAPH_EDGES` / `RETIRED_CONTAINMENT_DERIVATIONS` /
+    `RETIRED_WITH_LEGACY_STORE`).
+  - **Two accepted losses, on record** (closed the next day — see Addendum 3):
+    `MEMBER_OF` and `RUNS_EOL` were derived by nothing until their declaration paths
+    landed; the facts stayed fully queryable in `ansible_inventory_*` / `eol_registry`
+    throughout.
+
+Still open after P5: edge retirement ("saw the full population" signal), `identity_keys`
+consumption by the resolver, the declaration grammar for the two accepted losses (closed
+the next day — see Addendum 3), and promoting `agents/drift.py`'s module-local sets into
+per-collector declarations.
+
+---
+
+## Addendum 3 (2026-08-13) — the junction grammar closes the two accepted losses
 
 The two P5 accepted losses are restored as declarations. The contract grew ONE
 construct — `NodeSpec.row_gathers: tuple[RowGather, ...]`, legal only on a
@@ -347,104 +443,7 @@ test):
   product resources contribute nothing; widening is one NodeSpec per anchor
   type the day a second host domain is live.
 
-Still open from the original plan after this: edge retirement ("saw the full
-population" signal), `identity_keys` consumption by the resolver, and promoting
-`agents/drift.py`'s module-local sets into per-collector declarations —
-TRK-359's grammar item drops off that list.
-
----
-
-## Addendum 2026-08-12 (evening) — P3, P4 and P5 complete: there is one store
-
-The plan below this line is **finished**. `resource_relationships` no longer exists;
-`graph_nodes`/`graph_edges` is the only edge store. Execution record:
-
-- **P3** (TRK-357): backfill migration `8965b6329b94` — 101 historical edges recovered
-  live, containment refused by the enumerated `CONTAINMENT_TYPES` allow-list.
-- **P4** (TRK-364, MR !40): readers re-pointed; live-verified on production.
-- **P5** (TRK-358..363, branch `feat/p5-graph`): six parallel worktree agents off
-  `316476c`, folded T4 → T5-A → T5-B → T2 → T3-drop-last:
-  - **Resolver switch** (TRK-361): `graph_phase3.resolve_entities` is the sole identity
-    writer; `host_reconcile`'s IS_SAME_AS emitters deleted after all three coverage gaps
-    were closed red-first (`HOST_NODE_TYPES` +LinuxHost +NetDiscoveredHost,
-    `NodeSpec.is_host_identity` + guard test, shared-IP review-band floor with the
-    routability/3-claimant guards ported from the dying emitter).
-  - **Writer removal** (TRK-358 whole-method, TRK-360 surgical): every
-    `emit_edge`/`emit_edges_batch` call site deleted; `graph_maintenance.py`
-    6,355 → 986 lines; each deletion carries an epitaph naming its reinstating
-    declaration path. Measured: 2,504 → 0 legacy rows and 406 → 0 minted convergence
-    Resources per maintenance pass, ~2× faster.
-  - **Consumer surface** (TRK-362): legacy routes and `get_neighborhood` gone; chat and
-    the dashboard read `graph_kg` (BFS that runs identically on SQLite and PostgreSQL).
-  - **The drop** (TRK-363): migration `95d988b2bc3c` after a row-by-row derivability
-    audit; `db/relationships.py` is vocabulary + the four canonical absence sets
-    (`DEFERRED` / `MIGRATED_TO_GRAPH_EDGES` / `RETIRED_CONTAINMENT_DERIVATIONS` /
-    `RETIRED_WITH_LEGACY_STORE`).
-  - **Two accepted losses, on record** (TRK-359 — **closed 2026-08-13**, see the
-    addendum above): `MEMBER_OF` and `RUNS_EOL` were derived by nothing until their
-    declaration paths landed; the facts stayed fully queryable in
-    `ansible_inventory_*` / `eol_registry` throughout.
-
-Still open from the original plan after P5: edge retirement ("saw the full population"
-signal), `identity_keys` consumption by the resolver, TRK-359's declaration grammar
-(**closed 2026-08-13** — the junction addendum above), and promoting
-`agents/drift.py`'s module-local sets into per-collector declarations.
-
----
-
-## Addendum 2026-08-12 — implementation status after the first two days
-
-P0–P2 are **merged and deployed**; the contract survived contact with reality but not
-unchanged. This section records what actually shipped, because the sketch in §4 is now
-historical.
-
-### What the contract became
-
-| Piece | Shipped form | Why it differs from the sketch |
-|---|---|---|
-| Node source | `NodeSpec(domain, resource_type)` over the generic `resources` table | `source_table=<ORM class>` would have put a domain import back into the contract — the exact thing being removed |
-| Edge types | validated free strings | the central `GraphEdgeType` enum is locked by a test asserting exactly five members, a guard whose purpose is blocking speculative central additions |
-| Direction | `EdgeSpec.direction: {FORWARD, INVERSE}` — `from_node`/`to_node` describe the JOIN, direction decides how the edge is STORED | a one-to-many join is functional from its "many" side by construction; an inverse edge runs the identical join through the byte-for-byte untouched ambiguity index |
-| Child tables | `ChildSpec(key, path, column)` — ordered `(table, fk)` descent resolved via shared SQLAlchemy `MetaData`, never model imports; `NodeSpec.gathers` (values ride onto the parent as a sorted list), `NodeSpec.from_rows` (values become shared, necessarily non-resource-backed nodes), `EdgeSpec.from_key_multi` (many-valued source key, each value still resolved key→one-target) | the join keys for `RUNS_IMAGE`/`ANSIBLE_MANAGES` live in child tables with no `resources` row and no metadata representation |
-
-The engine remains provably domain-ignorant: two AST guard tests (no collector imports,
-no domain/type-name branching) have passed **untouched** through every extension. That is
-the property that keeps this from becoming the next 6,367-line file.
-
-### Relationship migration scoreboard
-
-| Relationship | Status | Note |
-|---|---|---|
-| `RUNS_ON` (service→host) | **declared** (P1) | first cross-collector declaration; hyphen/underscore join via `hostmatch.graph_match_key` |
-| `BELONGS_TO` | **declared** (P2) | keyed on immutable `project_id` after a mutable-name bug was caught pre-ship |
-| `DEFINED_IN` | **declared** | first INVERSE edge; stored as the exact mirror of BELONGS_TO |
-| `RUNS_IMAGE` | **declared** | first child-table declaration; iac owns `ContainerImage` (the compose file naming an image is the source asserting it exists) |
-| `ANSIBLE_MANAGES` | **hand-written, blocked on OWNERSHIP not reach** | the stored edge runs cicd's entity → linux's entity; iac owns only the join rows. Needs a decision: re-anchor the edge on the `AnsibleInventoryFile` iac owns (a different, arguably better edge — but one that fails the equivalence discipline), or widen the ownership rule with a junction-declaration form. Deferred deliberately; do not widen the rule to unblock one edge. |
-
-Every migration used the two-commit equivalence discipline (declaration proven equal to
-the live deriver first, deriver deleted second with the oracle frozen verbatim in a test
-that keeps running). One deliberate divergence is pinned by a test: the old deriver kept
-emitting for retired compose files; the declarative path excludes retired rows.
-
-### Boundaries that remain, pinned executably
-
-*(historical as of 2026-08-13 — the junction addendum at the top of this file
-carries the current list; the "many-to-many" entry below has since been PARTLY
-closed: a junction whose rows one collector owns is now declarable via
-`NodeSpec.row_gathers`, while a join functional from neither side with no owned
-junction table remains refused.)*
-
-- **Many-to-many** — a join functional from neither side has no direction to declare it
-  from; needs a junction declaration, refused loudly in both directions today.
-- **Business-key hops** — `ChildSpec` walks PK joins only; `gitlab_projects.gitlab_project_id
-  = iac_files.gitlab_project_id` is deliberately inexpressible (it is what makes the
-  descent grammar safe to resolve generically).
-- **JSON-list child columns** — refused rather than flattened (`ansible_playbook_plays.hosts`).
-
-### Still open from the original plan
-
-P3 (backfill `resource_relationships` → `graph_edges` + drop containment edges), P4/P5
-(retire the old store), edge retirement (needs a "saw the full population" signal),
-`identity_keys` consumption by the resolver, and promoting the two module-local sets that
-landed in `agents/drift.py` (`_DURABLE_RESOURCE_TYPES`, `_EVENT_SHAPED_TYPES`) into
+**Final remaining open items** (as of this addendum, the closing state of this
+whole document): edge retirement ("saw the full population" signal), `identity_keys`
+consumption by the resolver, and promoting `agents/drift.py`'s module-local sets into
 per-collector declarations.

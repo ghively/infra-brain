@@ -1,7 +1,8 @@
 # infra-brain Read-Only Model (post Wave 1)
 
 Resolves F-004's over-claim ("every tool call routes through the safety callback
-chain") with the R2 three-layer model from `docs/audit/ARCHITECTURE-RECOMMENDATIONS.md` §2.
+chain") with the R2 three-layer model: structural read-only construction, pre-execution
+boundary gates, and audit-only observation — each detailed below.
 
 ## Layer 1 — Structural (read-only by construction)
 
@@ -82,4 +83,4 @@ PAN-free.
 **Takeaway for compliance evidence.** infra-brain's read-only + DLP layers
 detected and blocked account data at the ingestion boundary, recorded the denial
 in the audit log, and defaulted the offending data source off — cardholder data
-never crossed into the system. See TRK-100.
+never crossed into the system.

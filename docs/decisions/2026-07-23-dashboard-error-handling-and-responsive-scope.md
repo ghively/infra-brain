@@ -1,6 +1,6 @@
 # Decision: dashboard error-handling rollout scope + responsive/mobile CSS
 
-**Context:** GitLab issue #91 (`systems-design`) found that 30 of 34
+**Context:** A design review found that 30 of 34
 dashboard-app pages use an identical, unstyled `if (error) return <div
 role="alert">...</div>` pattern that unmounts the entire page on any fetch
 error, bypassing the already-shipped `GlobalErrorBanner`/`EndpointErrorBanner`
@@ -9,8 +9,7 @@ recorded decision on whether that is intentional.
 
 ## Decision 1: rollout scope for this pass
 
-This pass (see `docs/superpowers/plans/2026-07-23-frontend-error-handling-
-redesign.md`) built the shared fix — `usePageData` (Task 2) — and migrated
+This pass built the shared fix — `usePageData` (Task 2) — and migrated
 exactly ONE page, `Drift.tsx` (Task 3), as the reference implementation,
 plus fixed `Graph.tsx`'s separately-noted inconsistent loading states (Task
 4). The other ~33 pages using the old pattern are **not** migrated in this

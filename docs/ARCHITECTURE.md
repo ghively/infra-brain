@@ -38,7 +38,7 @@ class OctopusAgent(ETLConnector):
 - `graph.py` — the whole sweep topology comes from `etl.spec.sweep_members()`.
 - `AGENTS.md` — generated from the specs by `scripts/gen_agents_md.py`.
 
-Before Phase 1 Task 5 (TRK-047) this metadata lived in four hand-maintained
+Before Phase 1 Task 5 this metadata lived in four hand-maintained
 tables that had already drifted (octopus: 24h in fleet_health vs 26h in
 freshness). There are now zero shadow copies; a value that appears in two
 places is a bug.
@@ -88,8 +88,7 @@ collector against a system that does not exist. See
 | `REPORTER` | Read-only reporting/rollups outside the sweep graph. |
 | `ON_DEMAND` | Dispatched explicitly (operator/hook/scoped job), never part of the scheduled sweep graph. |
 
-Tier labels describe the orchestration-v2.1 *target* architecture (see
-`docs/superpowers/specs/2026-07-11-agent-orchestration-v2.1-design.md`). The
+Tier labels describe the orchestration-v2.1 *target* architecture. The
 Phase 2 sweep graph has landed but is strictly opt-in via `sweep_graph_enabled`
 (default `False`, see the "Sweep graph" section below); with it off — the
 default runtime path — all domains still dispatch flat via
@@ -153,7 +152,7 @@ START
   │
   ▼
 dispatch  (filters collection_disabled_domains + unknown domains → "skipped",
-           never Sent — R-11, TRK-026)
+           never Sent — R-11)
   │
   ├─Send─▶ collect_<domain>  (one node per COLLECTOR-tier member, parallel,
   │         per-domain RetryPolicy, Redis dedup try_acquire(domain,"all"))
@@ -201,7 +200,7 @@ transient in-request HTTP retries inside the collectors themselves.
 
 ### Partial-sweep semantics
 
-- **`succeeded_domains` (drift suppression, TRK-074):** the `drift` node
+- **`succeeded_domains` (drift suppression):** the `drift` node
   computes `succeeded = {d for d, s in statuses.items() if s in
   ("completed", "partial")}` and passes it to
   `DriftDetector.detect_state_drift(succeeded_domains=succeeded)`, which
@@ -234,12 +233,12 @@ Per-domain terminal statuses that land in `SweepState["statuses"]`:
 | `failed` | `ETLConnector.run()`, or the graph's collector/reconciler/reasoner wrapper on a non-retryable exception | Run aborted |
 | `skipped` | graph `_dispatch` (disabled/unknown domain), or the collector wrapper (Redis lock already held / Redis unavailable) | Domain never actually ran this sweep |
 | `retry_exhausted` (`RUN_STATUS_RETRY_EXHAUSTED`, `etl/base.py`) | the graph's collector wrapper only, on the `RetryPolicy`'s final attempt | A retryable exception class kept recurring past `max_attempts`; the wrapper swallows the final re-raise so the graph never aborts, and records this status instead |
-| `interrupt_pending` (`RUN_STATUS_INTERRUPT_PENDING`, `etl/base.py`) | defined now (TRK-072), **not yet written by any Phase 2 code path** | Reserved for Phase 3's remediation interrupt/approval gate; `callbacks/freshness.py::check_collection_health()` and `agents/fleet_health.py` already classify it as in-progress-equivalent (no alert) so dashboards don't need a Phase 3 change to render it correctly once it starts appearing |
+| `interrupt_pending` (`RUN_STATUS_INTERRUPT_PENDING`, `etl/base.py`) | defined now, **not yet written by any Phase 2 code path** | Reserved for Phase 3's remediation interrupt/approval gate; `callbacks/freshness.py::check_collection_health()` and `agents/fleet_health.py` already classify it as in-progress-equivalent (no alert) so dashboards don't need a Phase 3 change to render it correctly once it starts appearing |
 
 `retry_exhausted` is classified as failed-equivalent (alerts) by
 `check_collection_health()`/`fleet_health.py`; `interrupt_pending` is
 classified as in-progress-equivalent (no alert) — both extended into
-`api/_helpers.py::_RUN_STATUS` and `chat/tools.py`'s status `CASE` (TRK-075).
+`api/_helpers.py::_RUN_STATUS` and `chat/tools.py`'s status `CASE`.
 
 ### Checkpointing
 
@@ -259,7 +258,7 @@ the compiled graph with:
   `require_postgres_checkpointer()` hard-fails a `MemorySaver` for exactly
   that future path (`run_sweep()` itself only warns, since plain sweeps can
   tolerate losing an exited checkpoint).
-- **Retention** (Phase 3 Task 5, closes **TRK-069**): `retention.py`'s daily
+- **Retention** (Phase 3 Task 5): `retention.py`'s daily
   `prune_expired()` now also calls `prune_checkpoints(session)`, deleting
   stale rows from `checkpoints`/`checkpoint_writes`/`checkpoint_blobs`. See
   "Checkpoint retention" below for the policy and verified schema.
@@ -344,14 +343,14 @@ byte-identical. All three are `config.py` / `.env.example` settings:
 
 | Flag | Default | Agent / graph | Enable prerequisite |
 |---|---|---|---|
-| `rootcause_llm_enabled` | `False` | `RootCauseAgent` (`agents/rootcause.py`) | A real-model structured-output smoke run (TRK-077) — `with_structured_output(RootCauseFinding)` has only been exercised against a stub (`FakeListChatModel`) in CI; verify the finalization call against the real provider before flipping this on anywhere real drift is scored. |
-| `compliance_gap_finder_enabled` | `False` | `ComplianceAgent` (`agents/compliance.py`) | A real-model smoke run of the LLM-assisted gap-proposal method — same rationale as above (no structured-output/tool-call has been exercised against a live model in CI). Also confirm `_stable_gap_hash` wording consistency per TRK-079 before relying on idempotent re-runs on a deployed stack. |
+| `rootcause_llm_enabled` | `False` | `RootCauseAgent` (`agents/rootcause.py`) | A real-model structured-output smoke run — `with_structured_output(RootCauseFinding)` has only been exercised against a stub (`FakeListChatModel`) in CI; verify the finalization call against the real provider before flipping this on anywhere real drift is scored. |
+| `compliance_gap_finder_enabled` | `False` | `ComplianceAgent` (`agents/compliance.py`) | A real-model smoke run of the LLM-assisted gap-proposal method — same rationale as above (no structured-output/tool-call has been exercised against a live model in CI). Also confirm `_stable_gap_hash` wording consistency before relying on idempotent re-runs on a deployed stack. |
 | `remediation_interrupt_enabled` | `False` | `remediation_graph.py` | Requires a real (non-`MemorySaver`) Postgres checkpointer — `require_postgres_checkpointer()` hard-fails otherwise. Confirm the dedicated sync-loop thread (`graph._get_sync_loop`) is healthy in the target environment (APScheduler + FastAPI both drive the graph through it) before enabling on a deployed stack. |
 
 **Policy hold (2026-07-22):** flipping any of these three flags on live data is on
 explicit hold pending AWS Bedrock account access (per operator directive) — the current
 lab environment's Ollama gateway is a throwaway plumbing-test workaround, not the target
-provider; see docs/HANDOFF.md's reasoner-tier hold note.
+provider.
 
 ### RootCause tool loop + finalization audit
 
@@ -360,7 +359,7 @@ timeline-correlation logic, edge confidence pinned at `0.85`. Flag ON:
 `_collect_llm()` runs a 3-phase flow per unnoted drift event (capped at
 `rootcause_llm_max_events_per_run`, default 20): (1) a session gathers
 per-event context + the deterministic baseline, then closes — no LLM call
-ever happens inside an open `get_session()` (TRK-068); (2) a `reason()` tool
+ever happens inside an open `get_session()`; (2) a `reason()` tool
 loop (`correlate_deploys`, `query_drift_events`, `query_compliance`,
 `query_resource_neighborhood`) followed by a separate
 `get_chat_model(role="rootcause").with_structured_output(RootCauseFinding)`
@@ -372,7 +371,7 @@ resolves to a concrete `Resource` by exact name (KG-2, both modes) — the
 LLM exception falls back to the deterministic result for that event and
 marks the run `partial`; events beyond the cap silently fall back with no
 run-status change. Both `_REASON_TASK_TEMPLATE` and `_FINALIZE_PROMPT_TEMPLATE`
-fence interpolated infra data as "untrusted" (TRK-077) since a compromised
+fence interpolated infra data as "untrusted" since a compromised
 collector-fed source (resource/pipeline names, config values) could otherwise
 attempt to steer the model toward a false high-confidence edge.
 
@@ -416,7 +415,7 @@ to ship without a data migration: old threads simply age out through the
 poll instead of being resumed against a graph shape they were never
 compiled for.
 
-### Checkpoint retention (TRK-069, closed)
+### Checkpoint retention (closed)
 
 `retention.py:prune_checkpoints(session)`, wired into the daily
 `prune_expired()` job, deletes stale rows from LangGraph's own
@@ -497,7 +496,7 @@ appending it to the FastAPI event-loop chain does not reintroduce blocking I/O
 (CLAUDE.md constraint #2) or an unguarded sync handler on the async path
 (CLAUDE.md constraint #3 as previously applied). This is a deliberate,
 verified deviation from the original Phase 4 design intent that "the callback
-handler is async" -- see TRK-084 and ADR-0002's outcome note for the durable
+handler is async" -- see ADR-0002's outcome note for the durable
 record of that deviation.
 
 **Masking.** PAN-shaped content never leaves the process. The Langfuse client
@@ -517,8 +516,8 @@ between LangChain and the exported trace.
 | Flag | Default | Component | Enable prerequisite |
 |---|---|---|---|
 | `sweep_graph_enabled` | `False` | `graph.py` sweep StateGraph | See "Sweep graph" cutover runbook above. |
-| `rootcause_llm_enabled` | `False` | `RootCauseAgent` | Real-model structured-output smoke run (TRK-077). |
-| `compliance_gap_finder_enabled` | `False` | `ComplianceAgent` | Real-model smoke run of the LLM gap-proposal method (TRK-078/079). |
+| `rootcause_llm_enabled` | `False` | `RootCauseAgent` | Real-model structured-output smoke run. |
+| `compliance_gap_finder_enabled` | `False` | `ComplianceAgent` | Real-model smoke run of the LLM gap-proposal method. |
 | `remediation_interrupt_enabled` | `False` | `remediation_graph.py` | Real (non-`MemorySaver`) Postgres checkpointer; healthy dedicated sync-loop thread. |
 | `langfuse_enabled` | `False` | `callbacks/langfuse_handler.py` | (1) The self-hosted Langfuse v3 compose stack (`docker/langfuse/`) must be deployed and reachable -- operator-only, manual deploy, never CI (see `docker/langfuse/README.md`); its disk/RAM sizing (~25 GiB / ~11 cpus nominal, ClickHouse's 8 GiB floor) is a hard operator gate given this host's 2026-07-12 100%-disk incident -- check `df -h` before standing it up. (2) `LANGFUSE_HOST`/`LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY` provisioned into Bitwarden per the repo secrets policy, never hard-coded or committed (`docker/langfuse/.env` is gitignored). Flipping the flag with any of the three unset is a silent no-op -- `maybe_langfuse_handler()` returns `None` and tracing stays off. |
 
@@ -653,9 +652,9 @@ in-flight collection session. This is intentional, not a session-discipline
 slip -- the audit row must survive even if the collection transaction rolls
 back, so it cannot share a transaction boundary with the data it's reporting
 on. Both `octopus.py` and `vuln.py` carry an inline comment saying so at the
-write site; see TRK-081 for the full history (including the corrected
-`dropped_count` computation, which now excludes cutoff-window-excluded rows
-from the cap-truncation count so the two loss reasons are never conflated).
+write site; the `dropped_count` computation was later corrected to exclude
+cutoff-window-excluded rows from the cap-truncation count so the two loss
+reasons are never conflated.
 
 #### MCP server tracing — deferred (2026-07-23, #90)
 
@@ -668,10 +667,9 @@ would require introducing a brand-new manual-tracing pattern (no
 `@traceable`/`RunTree` call site exists anywhere else in this codebase) for
 a need the audit middleware's per-call `latency_ms`/`status`/`error` rows
 already answer. Revisit only if a concrete need for span-level MCP tracing
-emerges (see `docs/superpowers/plans/2026-07-23-mcp-observability-design.md`
-Task 3 for the full reasoning) — do not build this speculatively.
+emerges — do not build this speculatively.
 
-## RAG knowledge store (TRK-067)
+## RAG knowledge store
 
 A read-only Confluence retrieval-augmented-generation knowledge store,
 dark-launched behind `rag_enabled` (default `False`) so merging it changes
@@ -702,7 +700,7 @@ the model or the DB. `search_knowledge()` additionally returns `[]` on a blank
 query, or when the bound DB is not PostgreSQL (e.g. the sqlite test path), since
 pgvector's `<=>` cosine operator is PostgreSQL-only.
 
-### Hybrid retrieval: cosine + Postgres FTS, fused with RRF (TRK-297 R6)
+### Hybrid retrieval: cosine + Postgres FTS, fused with RRF (R6)
 
 On PostgreSQL, `search_knowledge()` computes **two** rankings over the same
 filtered candidate set and fuses them:
@@ -717,7 +715,7 @@ score, which is the point: cosine similarity (bounded `[-1, 1]`) and `ts_rank`
 (unbounded, corpus- and length-dependent) share no scale, and any normalisation
 between them would need a corpus-wide calibration that changes whenever the
 embedding model or the document mix does. What this buys is the class of query a
-dense embedding blurs — an exact error string, a hostname, a `TRK-nnn` id.
+dense embedding blurs — an exact error string, a hostname, a ticket id.
 
 `rag_hybrid_enabled` (default `true`, subordinate to `rag_enabled`) is the
 operator kill-switch back to pure cosine, so a ranking regression is a config
@@ -753,7 +751,7 @@ frozen literal copies of the DDL rather than importing the model constants;
 `tests/test_rag_hybrid_ddl_parity.py` is what keeps the two copies honest, since
 `compare_metadata` is structurally blind to a column it has been told to ignore.
 
-R7 (cross-encoder reranking) remains deferred — see `docs/TRACKER.md` TRK-297.
+R7 (cross-encoder reranking) remains deferred.
 
 ### Embedding provider auto-resolution and the EMBEDDING_DIM caveat
 

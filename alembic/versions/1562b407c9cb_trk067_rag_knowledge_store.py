@@ -1,4 +1,4 @@
-"""trk067_rag_knowledge_store
+"""rag_knowledge_store
 
 Revision ID: 1562b407c9cb
 Revises: c534a2dd6870

@@ -413,7 +413,7 @@ def test_query_eol_status_forwards_days_until_eol():
 
 
 # ---------------------------------------------------------------------------
-# TRK-067: search_knowledge RAG chat tool
+# search_knowledge RAG chat tool
 # ---------------------------------------------------------------------------
 
 

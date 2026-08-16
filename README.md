@@ -199,14 +199,28 @@ infra-brain/
 ├── dashboard-app/         # Vite+React dashboard — source for /dashboard2
 ├── .claude/               # AI-native engineering tooling: specialist agents,
 │                            reusable skills, and hooks used to build this repo
-├── docker/                 # docker-compose.yml + Dockerfile
+│                            (see .claude/README.md for what's project-specific
+│                            vs. a bundled, reusable LangChain toolkit)
+├── skills/                # An operating manual for USING the deployed system's
+│                            MCP tool surface — distinct from .claude/skills/,
+│                            which is tooling for DEVELOPING this repo
+├── rules/                 # Policy-as-code (e.g. compliance rule thresholds),
+│                            loaded at runtime by ComplianceAgent/RemediationAgent
+├── scripts/               # One-off/bootstrap scripts — see scripts/README.md
+│                            for which ones you'll actually use
+├── docker/                 # docker-compose.yml + Dockerfile (see docker-compose.yml's
+│                            header for what the .dev/.deploy/.homelab overlays are)
 ├── k8s/                    # Kubernetes manifests
 ├── alembic/                # Database migrations
 ├── tests/                  # pytest suite
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── READONLY-MODEL.md
-│   └── decisions/           # Architecture decision records
+├── docs/                   # See docs/README.md for an index — ARCHITECTURE.md,
+│                            READONLY-MODEL.md, MCP_SERVER.md, USER_GUIDE.md, and
+│                            PATTERNS.md are the load-bearing references;
+│                            decisions/ is the architecture-decision-record archive
+├── dev_proxy.py            # Optional local-dev proxy: serves the dashboard's static
+│                            files directly while proxying /api/* to a running backend
+├── Makefile                # `make setup|test|lint|doctor` — shortcuts for the
+│                            commands spelled out below
 ├── .env.example
 └── pyproject.toml
 ```

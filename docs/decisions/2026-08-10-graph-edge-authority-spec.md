@@ -67,7 +67,7 @@ All writes still flow through the single choke point `upsert_edge` (`graph_phase
 | W2 | Active edge, **same authority** as writer | Refresh in place (today's semantics, `graph_phase2.py:190-194`): update `method`/`confidence`/`evidence`/`source`/`recorded_at`, preserve `valid_from`. This keeps the 2-hourly re-observation of the Phase-2 emitters cheap and history-compact, unchanged. |
 | W3 | Active edge `authority='auto'`, writer `'human'` (**escalation**) | **Retire the auto row** (`valid_to = now`, reusing `retire_edges` semantics, `graph_phase2.py:199-214`) **and insert a new row** with `authority='human'`, `valid_from = now`. Do NOT mutate in place. Rationale: an authority change is a *different assertion*, and the bitemporal design's whole point is that history shows "machine asserted 0.990 from T1–T2; operator declared 1.000 from T2–". Today's in-place mutation by `confirm_same_as` over a pre-existing auto edge destroys that record in the human→auto direction's mirror image of KG-1. |
 | W4 | Active edge `authority='human'`, writer `'auto'` (**de-escalation attempt**) | **No-op.** Return the existing edge unchanged; log at WARNING (`"upsert_edge: auto writer %s declined to overwrite human-authority edge %s"`). This is a boundary guard in the DLP/readonly spirit — prevent and record, never raise (a raise inside an emitter's SAVEPOINT block, e.g. `graph_maintenance.py:465`, would abort the whole pass for a condition that is expected and benign). Emitters MUST also pre-filter (rule E1, §4.3) so hitting this guard is rare and indicates an emitter bug. |
-| W5 | `edge_type == NOT_SAME_AS` with `authority != 'human'` | Raise `ValueError`, same style as the confidence rule at `:158-162`. Negative identity assertions are human-only in this design (machine negative knowledge stays what it is today: *suppression*, e.g. TRK-087, which asserts nothing). |
+| W5 | `edge_type == NOT_SAME_AS` with `authority != 'human'` | Raise `ValueError`, same style as the confidence rule at `:158-162`. Negative identity assertions are human-only in this design (machine negative knowledge stays what it is today: *suppression*, which asserts nothing). |
 
 **Retraction fix (KG-1's second half):** `retract_same_as` replaces the filter `GraphEdge.source == EMITTER_SAME_AS_CONFIRMED` (`graph_phase3.py:878`) with `GraphEdge.authority == 'human'`. The error message at `:891-898` updates accordingly. Everything else about retract (with_for_update at `:886`, review-row reopen with retraction_history at `:911-955`) is sound and stays.
 
@@ -126,7 +126,7 @@ This is the symmetry the finding demands: rejection now blocks emission (it didn
 - **New:** `POST /api/graph/entity-resolution/{action_id}/reject` (admin-gated, mirroring the confirm route at `graph_api.py:32-45`), body `{target_node_id?, rejector, reason?}`:
   - With `target_node_id` (must be in the row's own `candidate_matches`, same constraint discipline as confirm): write the `NOT_SAME_AS` pair for that one candidate; remove it from the row's `candidate_matches`; the row **stays `pending`** if candidates remain, else flips to `rejected`.
   - Without `target_node_id`: reject every listed candidate (each gets its own attributed `NOT_SAME_AS` pair — the operator did look at all of them; that is an honest per-pair assertion), row flips to `rejected`.
-  - Blank `rejector` refused — identical TRK-136 stance to `confirm_same_as` (`graph_phase3.py:715-716`).
+  - Blank `rejector` refused — identical stance to `confirm_same_as` (`graph_phase3.py:715-716`).
 - The generic `POST /api/dashboard/actions/{id}/reject` (`governance_ops.py:631-655`) gains a 409 for `REVIEW_ACTION_TYPE`, pointing at the new route — the exact mirror of what the generic *approve* route already does (`graph_api.py:40-43`). The comment in `action_decisions.py:105-112` claiming a bare status flip suffices for this action_type is superseded by this design (a bare flip is precisely the unattributed, pair-less rejection that caused KG-3).
 
 ### 3.5 `queue_for_review` idempotency change
@@ -165,12 +165,12 @@ which maps each `resources.id` to its `graph_nodes` rows via `graph_nodes.resour
 
 ### 4.2 host_reconcile's obligations (fixes KG-2's emission half)
 
-In `_emit_is_same_as_edges` (`host_reconcile.py:1200-1323`), immediately after the two existing TRK-087 guards (`:1268`, `:1281`) and before appending edges for a pair (`:1300`):
+In `_emit_is_same_as_edges` (`host_reconcile.py:1200-1323`), immediately after the two existing suppression guards (`:1268`, `:1281`) and before appending edges for a pair (`:1300`):
 
 1. **Ambiguous-leg gate:** if either endpoint's source label is in the merged record's `identity_ambiguous_sources` (now also persisted — §5.2), skip every pair involving that leg. The coin-flip winner of a same-source collision is exactly the row first-write-wins kept (`:805-807`); asserting it at 0.95 while a human question about it may be open is KG-2's core defect.
-2. **Cross-store gate:** `resource_pair_gate(...)` — skip on any non-None reason, log at INFO with the reason (mirroring the TRK-087 suppression logging style at `:1269-1277`).
+2. **Cross-store gate:** `resource_pair_gate(...)` — skip on any non-None reason, log at INFO with the reason (mirroring the existing suppression logging style at `:1269-1277`).
 
-The same two gates apply to `_emit_cross_hostname_ip_edges` (the TRK-062 pass, `host_reconcile.py:1407+`), which is an even lower-confidence emitter and must not outrun a human either.
+The same two gates apply to `_emit_cross_hostname_ip_edges` (`host_reconcile.py:1407+`), which is an even lower-confidence emitter and must not outrun a human either.
 
 `host_reconcile` remains the **sole** `IS_SAME_AS` writer in `resource_relationships` (the Task 4.6 contract restated at `graph_phase3.py:65-70`) — the gate changes what it declines to write, never who writes.
 
@@ -183,7 +183,7 @@ The same two gates apply to `_emit_cross_hostname_ip_edges` (the TRK-062 pass, `
 
 `_score_candidate` (`graph_phase3.py:433-523`) gains one counter-evidence source: if either node's `resource_id` maps to a `host_identities` row whose (now persisted) `identity_ambiguous_sources` contains that node's source label, append `"unsettled identity leg for <source> (host_reconcile same-source collision)"` to `counter_evidence`. Existing machinery then does the right thing automatically — counter-evidence diverts to review instead of auto-emit (`:1160`, `:1241`).
 
-The existing TRK-304 DriftEvent-suppression direction (`_same_as_review_exists`, `:977-1010`) is sound and unchanged.
+The existing DriftEvent-suppression direction (`_same_as_review_exists`, `:977-1010`) is sound and unchanged.
 
 ---
 
@@ -233,8 +233,8 @@ Live state (given): 2,427 sound edges from the deterministic convergence emitter
 2. **Defensive backfill (no-op on live data, required for dev/test parity):** one `UPDATE graph_edges SET authority='human' WHERE source = 'graph_phase3.confirm_same_as'` in the migration, so any environment that *does* hold confirmed edges (test fixtures, dev DBs) is coherent the moment the code deploys. Idempotent, 0 rows in prod.
 3. **Existing `rejected` ProposedAction rows are NOT converted into `NOT_SAME_AS` vetoes.** A historical rejection was a bundle-level, unattributed status flip; fabricating up to 10 per-pair human declarations from it would be dishonest provenance. They remain as history; because `REVIEW_LIVE_STATUSES` shrinks, those nodes become re-askable — which is the intended KG-3 fix, and costs nothing on a DB with 0 such rows.
 4. **Ordering:** the `graph_edges.authority` and `host_identities.identity_ambiguous_sources` columns must land **before or with** the code that reads them; `server_default` + nullable respectively make both deploy-order-safe against old code (old code never writes the columns; new code tolerates NULL ambiguous-sources). The `proposed_actions` index swap is safe with 0 live entity-resolution rows; on Postgres the new partial index should be created with the project's standard `CONCURRENTLY` discipline (the `/migration-create` danger-pattern review will check this — do not hand-write).
-5. **All three hard MR gates** (`lock-freshness`, `migration-parity`, `sql-execution-check`) must be replicated locally via `/pg-gate-check` before push — this change touches `db/models/` and is exactly the class the sqlite suite cannot validate (CLAUDE.md constraint 5, MR !195 precedent).
-6. **Derivation-version stamp:** `graph_maintenance` stamps a derivation-logic version into its graph-health stats (TRK-117, `graph_maintenance.py:488-489`); bump it, so the first post-deploy pass is distinguishable in the health history.
+5. **All three hard MR gates** (`lock-freshness`, `migration-parity`, `sql-execution-check`) must be replicated locally via `/pg-gate-check` before push — this change touches `db/models/` and is exactly the class the sqlite suite cannot validate (CLAUDE.md constraint 5).
+6. **Derivation-version stamp:** `graph_maintenance` stamps a derivation-logic version into its graph-health stats (`graph_maintenance.py:488-489`); bump it, so the first post-deploy pass is distinguishable in the health history.
 7. **Traversal:** `NOT_SAME_AS` is a negative assertion, not connectivity. `blast_radius` / `root_cause_candidates` (`graph_phase3.py:1318+`) MUST exclude `edge_type='NOT_SAME_AS'` from the walk (add to the walk's edge-type filters); `get_reconciliation_state` (`:628-677`) should surface active vetoes on each row's candidates so reviewers see them.
 
 ---
@@ -246,10 +246,10 @@ Live state (given): 2,427 sound edges from the deterministic convergence emitter
 3. **Decay never touching structural or confirmed edges** (graph_maintenance's decay over `resource_relationships`). Untouched. New human-authority edges live in `graph_edges`, which decay does not process; do not "helpfully" extend decay there.
 4. **Bounded traversals** — `MAX_HOPS = 3`, `MAX_TOP_N = 100` (`graph_phase3.py:165-167`) and the summarised, never-raw-dump read contract. Untouched.
 5. **Race-safe confirm/retract** — `with_for_update` on the contended edge rows (`graph_phase3.py:869-887`) and on the review row (`:917-927`); the confirm route's candidate-list constraint and blank-approver refusal (`:715-758`); the approve-route 409 single-path discipline (`graph_api.py:40-43`). The new reject route must *match* this bar, not relax it.
-6. **TRK-087 domain-conflict suppression and the IP-conflict guard** in both `host_reconcile` passes and both `graph_phase3` passes. The new gates are additional, after these, never replacements.
+6. **The existing domain-conflict suppression and the IP-conflict guard** in both `host_reconcile` passes and both `graph_phase3` passes. The new gates are additional, after these, never replacements.
 7. **The three Phase-2 emitters' join logic and evidence payloads** (`graph_phase2.py:271-485`) — the deterministic convergence emitters the review verified sound. They change only in that `upsert_edge` grows a defaulted keyword they don't pass.
 8. **host_reconcile as sole `IS_SAME_AS` writer in `resource_relationships`** (`graph_phase3.py:65-70`); `graph_phase3` as sole `SAME_AS`/`NOT_SAME_AS` writer in `graph_edges`.
-9. **TRK-304's DriftEvent detection and review-queue dedup** (`_note_identity_collision`, `_emit_identity_conflict_events`, `_same_as_review_exists`) — visibility layer stays exactly as is; this design adds the enforcement layer it lacked.
+9. **The existing DriftEvent detection and review-queue dedup** (`_note_identity_collision`, `_emit_identity_conflict_events`, `_same_as_review_exists`) — visibility layer stays exactly as is; this design adds the enforcement layer it lacked.
 10. **`retraction_history` preservation on reopened rows** (`graph_phase3.py:932-955`) — extend the same pattern to rejections (`previously_rejected` flag, §3.3), never replace it.
 
 ---

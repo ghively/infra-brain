@@ -1,6 +1,6 @@
 """KnowledgeAgent — Confluence → RAG knowledge-store ingestion collector.
 
-TRK-067 (RAG revival). A deterministic ``ETLConnector`` that pages through
+RAG knowledge-store revival. A deterministic ``ETLConnector`` that pages through
 Confluence spaces (GET-only, via ``tools.http_readonly.readonly_get`` — the R2
 layer-1 structural read-only requirement; never raw httpx for reads), then in
 its detail-write phase upserts ``Document`` rows and re-embeds their text into

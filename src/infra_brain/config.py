@@ -523,7 +523,7 @@ class Settings(BaseSettings):
     confluence_user_email: str = ""
 
     # -----------------------------------------------------------------------------
-    # RAG knowledge store (TRK-067) — strictly opt-in
+    # RAG knowledge store — strictly opt-in
     # -----------------------------------------------------------------------------
     # Master flag. Default OFF keeps the ConfluenceIngestAgent and the
     # search_knowledge retrieval tools inert (no-op / empty results) so the

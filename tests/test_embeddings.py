@@ -1,4 +1,4 @@
-"""Tests for the provider-agnostic embeddings factory (TRK-067).
+"""Tests for the provider-agnostic embeddings factory.
 
 Covers provider auto-resolution and the OpenAI-compatible-gateway construction
 path. The gateway kwarg matters operationally: Ollama (and some vLLM builds)
@@ -31,7 +31,7 @@ class _S:
 def test_embedding_dim_matches_db_model_column_width():
     """Settings.embedding_dim MUST equal db.models._EMBED_DIM -- they back the
     same pgvector column width from two different modules. config.py's own
-    comment has claimed this is cross-checked by a test since TRK-067; no
+    comment has claimed this is cross-checked by a test; no
     such test actually existed until now."""
     from infra_brain.db.models import _EMBED_DIM
 

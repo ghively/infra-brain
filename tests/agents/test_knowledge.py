@@ -1,4 +1,4 @@
-"""KnowledgeAgent (TRK-067 RAG revival) collector tests.
+"""KnowledgeAgent (RAG knowledge-store revival) collector tests.
 
 Mirrors tests/agents/test_cicd.py: uses the shared ``make_agent`` /
 ``sqlite_engine`` / ``session_patcher`` fixtures, mocks ``readonly_get`` (the

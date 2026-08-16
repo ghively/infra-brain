@@ -12,7 +12,7 @@ Status: ACTIVE — enforced by the daily scheduler job `infra_brain_retention_pr
 | `resource_configs` | 90 days | `collected_at` | Same class of data as snapshots. |
 | `drift_events` | 180 days | `detected_at` | RESOLVED rows only (`status != 'open'`). Open drift is never age-pruned. |
 | `collection_runs` | 180 days | `started_at` | Child `snapshots`/`resource_configs` of an expired run are deleted first; surviving `drift_events` are detached (`collection_run_id -> NULL`). |
-| LangGraph `checkpoints` (+ `checkpoint_blobs`, `checkpoint_writes`) | `RETENTION_CHECKPOINTS_DAYS` | `checkpoint->>'ts'` (JSONB) | Prunes stale threads via `retention.prune_checkpoints` (TRK-069). A `thread_id` is deleted only when its newest checkpoint is older than the window AND it is not referenced by any `ProposedAction` with `status IN ('pending','approved')`. Skips cleanly when the checkpoint tables are absent (MemorySaver-only / fresh env). |
+| LangGraph `checkpoints` (+ `checkpoint_blobs`, `checkpoint_writes`) | `RETENTION_CHECKPOINTS_DAYS` | `checkpoint->>'ts'` (JSONB) | Prunes stale threads via `retention.prune_checkpoints`. A `thread_id` is deleted only when its newest checkpoint is older than the window AND it is not referenced by any `ProposedAction` with `status IN ('pending','approved')`. Skips cleanly when the checkpoint tables are absent (MemorySaver-only / fresh env). |
 
 Out of scope (already bounded elsewhere): `vsphere_*_metrics`
 (`VSPHERE_METRICS_RETENTION_DAYS`, pruned by the vsphere agent), knowledge-graph
@@ -45,7 +45,7 @@ these indexes.
 
 LangGraph checkpoint tables (`checkpoints`, `checkpoint_blobs`,
 `checkpoint_writes`) are not ORM-mapped and are pruned by
-`retention.prune_checkpoints` (TRK-069), which runs in the **same daily
+`retention.prune_checkpoints`, which runs in the **same daily
 retention job** (`prune_expired`) as the table windows above. The window is the
 `retention_checkpoints_days` `Settings` field (`RETENTION_CHECKPOINTS_DAYS`).
 Because these tables carry no `created_at` column, staleness is measured from

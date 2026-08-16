@@ -6,7 +6,7 @@ Create Date: 2026-08-02 16:53:22.102950
 
 Widens document_chunks.embedding from Vector(1024) to Vector(1536).
 
-Reason: the RAG knowledge store (TRK-067) originally targeted a 1024-dim
+Reason: the RAG knowledge store originally targeted a 1024-dim
 embedding model. The live LLM gateway now in use (an OpenAI-compatible
 router) only serves Gemini-family embedding models, which natively emit
 3072-dim vectors -- verified live; no 1024-dim option exists there.

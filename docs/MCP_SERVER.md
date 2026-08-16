@@ -18,7 +18,7 @@ streamable-HTTP transport.
 ## Architecture
 
 ```
-Claude Code (infra-ops)
+MCP Client (e.g. Claude Code)
   │
   │  streamable-HTTP  Authorization: Bearer ibmcp_<token>
   ▼
@@ -49,8 +49,9 @@ Brain's own database:
 - Batch status flips on `drift_events` / `compliance_violations`
 - `agent_action_log` audit rows (including one per auth denial)
 
-Claude Code (infra-ops) remains the actor that opens GitLab MRs and runs
-Ansible playbooks. Infra Brain surfaces the data; infra-ops pulls the trigger.
+The connecting MCP client (e.g. Claude Code) remains the actor that opens GitLab
+MRs and runs Ansible playbooks. Infra Brain surfaces the data; the client pulls
+the trigger.
 
 ---
 
@@ -160,7 +161,8 @@ Name your keys accordingly; the key name is what shows up in the audit trail.
 
 ## Connecting from Claude Code
 
-The `infra-brain` MCP server is wired in the infra-ops repo's `.claude/settings.json`:
+The `infra-brain` MCP server is wired into an MCP-compatible client's config —
+for example, Claude Code's `.claude/settings.json`:
 
 ```json
 "infra-brain": {
@@ -173,7 +175,8 @@ The `infra-brain` MCP server is wired in the infra-ops repo's `.claude/settings.
 ```
 
 `INFRA_BRAIN_MCP_KEY` is the raw `ibmcp_…` token from the minting step above, set in
-the infra-ops repo's `.env` (the variable name is the client's choice — the server
+the connecting client's own environment — e.g. a `.env` file for Claude Code or
+another MCP client (the variable name is the client's choice — the server
 only reads the `Authorization` header). A pre-2026-07-23 hex `INFRA_BRAIN_MCP_TOKEN`
 value will 401 forever: it is not an `ibmcp_` token and hashes to no row in
 `mcp_api_keys`. The tools appear as `mcp__infra-brain__<tool_name>` after restarting
@@ -192,7 +195,7 @@ infra-brain (see Troubleshooting).
 | `INFRA_BRAIN_MCP_ENABLE_MUTATIONS` | `false` | Process-wide gate on mutating tools. **Layered on top of key scope — both are required.** A key scoped to `approve_proposal` still gets `{"error": "mutating MCP tools are disabled; …"}` (HTTP 200) while this is off. |
 | `INFRA_BRAIN_DEV` | `false` | `1` runs the MCP server with **no authentication** (local dev only). Refuses to boot when `ENVIRONMENT` is a hardened deployment. |
 | `ENVIRONMENT` | `development` | `deployed` (legacy alias `production`) marks a hardened stack and makes `INFRA_BRAIN_DEV` a hard startup failure. |
-| `INFRA_BRAIN_MR_ENABLED` | `false` | Enable GitLab MR creation in `remediation` + `inventory_reconcile` agents. Leave `false` — Claude Code / infra-ops opens MRs. |
+| `INFRA_BRAIN_MR_ENABLED` | `false` | Enable GitLab MR creation in `remediation` + `inventory_reconcile` agents. Leave `false` — the connecting MCP client (e.g. Claude Code) opens MRs instead. |
 | `INFRA_BRAIN_APP_URL` | `http://app:8000` | Internal URL used by `trigger_collection` to POST `/sweeps/{domain}`. Override if MCP runs outside the compose network. |
 | `MCP_TOOL_TIMEOUT_SECONDS` | `60` | Wall-clock ceiling for LLM-backed MCP tools (today: `query_nl`). `0` disables. |
 | `MCP_PORT` | `8002` | Port the MCP server listens on. |
@@ -606,7 +609,7 @@ mcp:
     context: ..
     dockerfile: docker/Dockerfile
   command: python -m infra_brain.mcp_server
-  # Bind on the real interface so infra-ops can reach MCP across LAN subnets.
+  # Bind on the real interface so remote MCP clients (e.g. infra-ops) can reach MCP across LAN subnets.
   # Access control is per-key scoped auth, NOT loopback binding.
   ports:
     - "8002:8002"

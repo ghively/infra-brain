@@ -1,8 +1,7 @@
-# TRK-038 — CI runner / deploy target / image store / secrets host separation
+# CI runner / deploy target / image store / secrets host separation
 
 - **Date:** 2026-07-17
 - **Status:** PROPOSED (pending ops decision — requires a second host)
-- **Tracker row:** TRK-038 (Origin IDs CICD-3, CICD-4)
 - **Scope:** Ops/infra proposal only. **No code or infra change is made by this document.**
 - **Author:** A. Operator (owner@example.com)
 
@@ -115,5 +114,5 @@ Each step is independently shippable and can be rolled back by reverting the one
 ## Decision needed
 
 Approve provisioning a second host and choosing its role (deploy target vs. runner). Until
-then TRK-038's single-host collapse stays **deferred** — this document is the proposal, not
+then the single-host collapse stays **deferred** — this document is the proposal, not
 an implementation.

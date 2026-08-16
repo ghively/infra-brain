@@ -1,4 +1,4 @@
-# ADR: audited, predicate-scoped batch closure over MCP (GitLab #144)
+# ADR: audited, predicate-scoped batch closure over MCP
 
 Date: 2026-07-29
 Status: accepted
@@ -69,7 +69,7 @@ Load-bearing constraints:
    constant.
 4. **The audit row is written in the same transaction as the status flips.**
    `McpAuditMiddleware` is best-effort by design and HTTP-scoped, so a direct
-   in-process invocation bypasses it (TRK-247). `_record_closure_audit` instead
+   in-process invocation bypasses it. `_record_closure_audit` instead
    writes an `AgentActionLog` row (`agent='manual_mcp'`, `domain='mcp'`,
    `tool=<tool name>`, PAN-scrubbed `args_summary` carrying the predicate, the
    resolution reason, the actor and the exact id list) *inside the tool body*
@@ -154,7 +154,7 @@ batch — per-row outcomes are always explicit, never silent.
 - **A new terminal status (e.g. `closed_never_valid`).** Rejected: every
   existing open-count reader would silently miscount until updated.
 - **Relying on `McpAuditMiddleware` for the audit record.** Rejected: it is
-  best-effort and bypassable by direct in-process invocation (TRK-247).
+  best-effort and bypassable by direct in-process invocation.
 
 ## Verification
 

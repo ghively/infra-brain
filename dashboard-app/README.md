@@ -29,9 +29,10 @@ To build the production bundle FastAPI actually serves:
 npm run build     # tsc -b && vite build; outputs to ../src/infra_brain/dashboard/static2/
 ```
 
-`npm run build` output is checked into git (it's what `/dashboard2` serves in
-production, same as any other static asset) — commit the regenerated
-`src/infra_brain/dashboard/static2/` files alongside any source change.
+`npm run build` output is what `/dashboard2` serves in production. In this
+public copy `src/infra_brain/dashboard/static2/` is gitignored — clone,
+`npm ci && npm run build` once, and it appears locally; the backend mounts it
+automatically if present (`main.py` skips the `/dashboard2` mount otherwise).
 
 ## The fetch chokepoint rule
 
@@ -69,12 +70,11 @@ src/
 
 ## Testing this app
 
-There is no separate test runner configured yet (`package.json` has no `test` script).
-Verification today is `npm run lint` (oxlint) + `npm run build` (`tsc -b` catches type
-errors and, transitively, most API-contract drift against `src/api.ts`'s call sites).
-Run `npm run build` locally before every commit that touches this directory
-— the served bundle (`src/infra_brain/dashboard/static2/`) is a build
-artifact, not source, so a source-only change has no effect until rebuilt.
+`npx vitest run` (component/unit tests) and `npx tsc --noEmit` (type check)
+are both expected to stay green — run before every commit. `npm run lint`
+(oxlint) and `npm run build` (which also runs `tsc -b`) are the other two
+checks worth running locally; `npm run build` additionally catches most
+API-contract drift against `src/api.ts`'s call sites.
 
-Tests: `npx vitest run` (component/unit tests) and `npx tsc --noEmit` (type
-check) — both are expected to stay green.
+The served bundle (`src/infra_brain/dashboard/static2/`) is a build artifact,
+not source — a source-only change has no effect until you rebuild.

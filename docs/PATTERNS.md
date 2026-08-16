@@ -609,8 +609,8 @@ def my_tool(args: str) -> str:
         # NOT: raise ValueError("...")                 # wrong — crashes reason() loop
 ```
 
-Source: `src/infra_brain/tools/ansible.py` (fixed in MR !89/`fix/tools/ansible`);
-`src/infra_brain/agents/query.py` (`langchain_core.tools` import confirmed post-MR !87).
+Source: `src/infra_brain/tools/ansible.py`;
+`src/infra_brain/agents/query.py` (`langchain_core.tools` import).
 
 ### HTTP helper retry pattern (tenacity)
 
@@ -643,7 +643,7 @@ def _get(client, url, **kwargs):
 
 Key invariant: **never retry 4xx errors other than 429** — retrying auth failures
 (401/403) or not-found (404) produces misleading noise. Source: `tools/rapid7.py`,
-`tools/octopus_tool.py`, `tools/gitlab.py` (added in MR !94/`fix/http-retry-tenacity`).
+`tools/octopus_tool.py`, `tools/gitlab.py`.
 
 ### Octopus ETL PAN masking
 
@@ -656,7 +656,7 @@ transparent to callers — the masked dict is returned and written to the DB.
 
 If you add a new Octopus API fetch, wrap the raw response through `_mask_record()`
 before upserting. Do not weaken or bypass the Luhn check. Source: `agents/octopus.py`
-lines 61–128 (added in MR !91/`fix/octopus-pan-shape-masking`).
+lines 61–128.
 
 ### Skipping domains without error (`collection_disabled_domains`)
 
@@ -665,9 +665,9 @@ lines 61–128 (added in MR !91/`fix/octopus-pan-shape-masking`).
 (e.g. `"vsphere,windows"`) to skip those collectors during scheduled runs without
 surfacing an error. The base agent checks this before calling `collect()`. Use this
 for planned maintenance windows, not permanent disables. Source: `config.py` line 194,
-`agents/base.py` (added in MR !95/`feat/collection-disabled-domains`).
+`agents/base.py`.
 
-### Agent registration: the `AgentSpec` declarative registry (TRK-041 / TRK-047)
+### Agent registration: the `AgentSpec` declarative registry
 
 Every agent class declares one frozen dataclass as a class attribute —
 `spec = AgentSpec(...)` (`spec: ClassVar[AgentSpec]`, defined in
@@ -689,7 +689,7 @@ class NetDiscoveryAgent(BaseAgent):
 This replaced the old hand-maintained parallel dicts — `scheduler`'s
 `DEFAULT_SCHEDULES`, `coverage.DEFAULT_SCHEDULES`, `fleet_health._DOMAIN_MAX_AGE`,
 and `freshness.DOMAIN_EXPECTED_MAX_AGE` — which had already drifted out of sync
-(octopus 24h vs 26h) before being collapsed to zero copies (TRK-047).
+(octopus 24h vs 26h) before being collapsed to zero copies.
 `ETLConnector.__init_subclass__` derives the legacy class attributes
 (`domain`/`schedule`/`skip_hook`/`dispatchable`) from `spec`, so `supervisor.py`
 and `scheduler.py` read them unchanged; the shadow-table consumers now derive from
@@ -706,7 +706,7 @@ no freshness monitoring, no roster entry) until re-enabled.
 > checked-in file diverges from what the specs would produce. To change the roster,
 > edit an agent's `spec` (or the generator) and regenerate.
 
-### `netdiscovery`: a catalogued divergence from the collector pattern (TRK-062)
+### `netdiscovery`: a catalogued divergence from the collector pattern
 
 `NetDiscoveryAgent` (`agents/netdiscovery.py`) is a variant of the standard
 collector pattern — fetch → classify → upsert a `Resource` plus domain-specific

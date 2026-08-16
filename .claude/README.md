@@ -1,3 +1,14 @@
+> **For a human reader landing here first:** this whole `.claude/` directory is the AI
+> coding-agent tooling used to build infra-brain with [Claude Code](https://claude.com/claude-code) —
+> specialist subagents, reusable skills, and hooks. It splits into two layers:
+> `.claude/agents/` (7 files) and roughly a dozen skills under `.claude/skills/` are
+> infra-brain-specific (they understand this project's domain — safety callbacks,
+> drift detection, the sweep graph); everything else under `.claude/skills/` (~30
+> files) is a bundled, reusable, generic LangChain/LangGraph authoring toolkit
+> ("langchain-lab") that isn't specific to this project — see `.claude/PLUGIN_SPEC.md`
+> for its own design doc. The rest of this file is written for Claude Code itself, not
+> a human reader — it's the operational reference the agent sessions load.
+
 > Claude Code subagent/tooling reference (moved from repo-root AGENTS.md on 2026-07-11
 > so "agents" stops meaning two things). Repo-root AGENTS.md now documents infra-brain
 > DOMAIN agents.

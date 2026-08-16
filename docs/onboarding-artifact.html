@@ -288,7 +288,7 @@
   <div class="grid g2">
     <div class="card">
       <h3>💬 The chat (most common)</h3>
-      <p class="small muted">In the Streamlit UI sidebar, ask in plain English. It translates to read-only SQL over the inventory and answers from real rows.</p>
+      <p class="small muted">In the dashboard's chat panel, ask in plain English. It translates to read-only SQL over the inventory and answers from real rows.</p>
       <pre>"Which hosts haven't reported in 7 days?"
 "List Octopus tentacles that are offline."
 "What changed on the core firewall this week?"</pre>
@@ -372,7 +372,7 @@
       </ul>
     </div>
   </div>
-  <div class="callout soon"><b>↗ Coming: a retrieval (RAG) memory layer.</b> A vector index over the agent's own accumulated <i>text</i> — Confluence pages, past drift narratives, reusable scripts, instincts, runbooks — will (a) make the self-improvement loop's reuse <i>semantic</i> ("seen a drift like this before?") and (b) ground chat/discovery answers in retrieved evidence to cut hallucination further. It's a memory for the <i>unstructured</i> knowledge; the structured inventory stays in SQL. <span class="muted">Design in progress — pgvector vs Qdrant under evaluation.</span></div>
+  <div class="callout soon"><b>↗ Shipped: a retrieval (RAG) memory layer.</b> A pgvector index over the agent's own accumulated <i>text</i> — past drift narratives, reusable scripts, instincts, runbooks — makes the self-improvement loop's reuse <i>semantic</i> ("seen a drift like this before?") and grounds chat/discovery answers in retrieved evidence, using hybrid dense+keyword retrieval with reciprocal rank fusion. It's a memory for the <i>unstructured</i> knowledge; the structured inventory stays in SQL.</div>
 </div></section>
 
 <!-- 07 PERFORMANCE -->
@@ -473,14 +473,14 @@
     <div><dt>Observation</dt><dd>A record of which tools an agent used — feeds learning context.</dd></div>
     <div><dt>Scan point</dt><dd>A scheduled collection entry for a domain.</dd></div>
     <div><dt>Propose, never dispose</dt><dd>Fixes go out as reviewable MRs/tickets, never direct infra changes.</dd></div>
-    <div><dt>RAG / retrieval (planned)</dt><dd>Semantic search over the agent's accumulated text to ground answers &amp; reuse.</dd></div>
+    <div><dt>RAG / retrieval</dt><dd>Semantic search over the agent's accumulated text to ground answers &amp; reuse.</dd></div>
     <div><dt>Hybrid layer</dt><dd>Deterministic collectors + an enforced LLM reasoning layer, side by side.</dd></div>
   </dl>
-  <p class="ptr" style="margin-top:18px">Canonical docs: <code>README.md</code> · <code>docs/USER_GUIDE.md</code> · <code>docs/superpowers/specs/2026-06-18-infra-brain-agent-design.md</code> · <code>CHANGELOG.md</code>.</p>
+  <p class="ptr" style="margin-top:18px">Canonical docs: <code>README.md</code> · <code>docs/USER_GUIDE.md</code> · <code>docs/ARCHITECTURE.md</code> · <code>CHANGELOG.md</code>.</p>
 </div></section>
 
 <footer><div class="container">
-  Infra Brain — read-only infrastructure intelligence. Living onboarding document; links to canonical docs rather than repeating them. <code>net</code> is a not-yet-implemented stub; script execution is off by default; the retrieval/memory layer is in design.
+  Infra Brain — read-only infrastructure intelligence. Living onboarding document; links to canonical docs rather than repeating them. Script execution is off by default; several reasoner-tier LLM features (root-cause reasoning, compliance gap-finding, remediation drafting) are opt-in and off by default.
 </div></footer>
 
 </div>

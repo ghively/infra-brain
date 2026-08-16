@@ -2,7 +2,7 @@
 
 Date: 2026-07-04
 Status: ACCEPTED (committed via MR per the repo's MR-gated merge policy)
-Finding: F-040 (docs/audit/FINDINGS.md) — two designs were approved before the
+Finding: F-040 — two designs were approved before the
 2026-07 audit; the audit verified neither subsystem's implementation status.
 This record closes that gap with explicit, committed decisions.
 
@@ -10,7 +10,7 @@ This record closes that gap with explicit, committed decisions.
 
 ## 1. Memory / retrieval layer — DECISION: KEEP-DEFERRED
 
-- Spec: docs/superpowers/specs/2026-06-19-brain-memory-retrieval-design.md
+- Spec: an internal design document (2026-06-19) for the memory/retrieval layer
 - Verified state (re-checked at this MR's HEAD): NOT implemented.
   `grep -rn "memory_chunks|MemoryChunk" src/ alembic/` returns nothing — no
   model, no migration, no runtime reference. No runtime path depends on it
@@ -29,7 +29,7 @@ This record closes that gap with explicit, committed decisions.
 
 ## 2. Design-sync roundtrip tooling — DECISION: KEEP (implemented-in-scripts)
 
-- Spec: docs/superpowers/specs/2026-06-23-design-sync-roundtrip-design.md
+- Spec: an internal design document (2026-06-23) for the design-sync roundtrip tooling
 - Verified state (re-checked at this MR's HEAD): IMPLEMENTED, but not under
   `src/`. The tooling lives at `scripts/design_sync/` (assemble, build,
   build_and_stage, build_pages, check_no_external_origins, manifest,

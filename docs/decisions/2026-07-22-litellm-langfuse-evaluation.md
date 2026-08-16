@@ -32,7 +32,8 @@ decision as everything below.
 
 ## Guardrails — LiteLLM's layer (Presidio + hide-secrets): real gap, not a drop-in
 
-infra-brain's `callbacks/dlp.py` only detects PANs (Luhn+IIN, tuned via TRK-110). Presidio
+infra-brain's `callbacks/dlp.py` only detects PANs (Luhn+IIN, tuned through a prior
+hardening pass). Presidio
 adds a genuinely different entity class (EMAIL/PERSON/PHONE/SSN) at the prompt level before
 the model sees it — complementary in principle.
 
@@ -46,7 +47,7 @@ instance) turning into mysteriously failed sweeps.
 **Verdict: the entity-class gap is worth closing eventually, but Presidio off-the-shelf
 needs domain tuning first** (an allowlist for infra-shaped tokens, or a false-positive-rate
 test against real infra-brain prompt samples) before it could be trusted fail-closed — the
-same maturity bar `dlp.py`'s own PAN detector had to clear via TRK-110. LiteLLM's guardrail
+same maturity bar `dlp.py`'s own PAN detector had to clear during its own hardening pass. LiteLLM's guardrail
 hook system is pluggable, so a custom infra-tuned guardrail is a legitimate alternative to
 Presidio specifically, if/when this is picked back up.
 
@@ -85,7 +86,7 @@ not the ~25 GiB figure originally implied.
    prompt shapes before enabling `default_on`/fail-closed — do not just turn Presidio on.
 4. Correct `docker/langfuse/README.md`/`docker-compose.yml`'s sizing numbers to the
    corrected budget above (or re-derive fresh if meaningfully more time has passed).
-5. Cross-reference [[infra-brain-trk-038-host-separation]] — a new dedicated VM for this
-   is a separate decision from TRK-038's CI/deploy-host separation, but both are "do we
+5. Cross-reference [[infra-brain-host-separation-proposal]] — a new dedicated VM for this
+   is a separate decision from the CI/deploy-host separation proposal, but both are "do we
    provision new infrastructure" questions worth considering together if/when either comes
    back up, especially given the parallel note about a possible GitLab-instance migration.

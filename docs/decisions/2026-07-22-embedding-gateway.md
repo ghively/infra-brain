@@ -1,11 +1,11 @@
-# DR: TRK-067 embedding provider on the dev deployment — Ollama gateway + mxbai-embed-large @ 1024
+# DR: embedding provider on the dev deployment — Ollama gateway + mxbai-embed-large @ 1024
 
-**Date:** 2026-07-22 · **Status:** accepted · **Relates to:** TRK-067,
-`docs/ARCHITECTURE.md` "RAG knowledge store", MR !197
+**Date:** 2026-07-22 · **Status:** accepted · **Relates to:**
+`docs/ARCHITECTURE.md` "RAG knowledge store"
 
 ## Context
 
-The TRK-067 RAG store embeds Confluence chunks through
+The RAG store embeds Confluence chunks through
 `embeddings.py::get_embeddings()`, a provider factory supporting `bedrock` and
 `openai`. The `document_chunks.embedding` column is `Vector(_EMBED_DIM)` with
 `_EMBED_DIM = 1024` **hardcoded** in `db/models/core.py` (the migration and HNSW
@@ -33,7 +33,7 @@ During activation prep on `deploy-host-01` (2026-07-22) we found:
    native dims — matches `Vector(_EMBED_DIM)` with no `EMBEDDING_DIM` override,
    keeping dev schema identical to CI/test schema). Set
    `EMBEDDING_OPENAI_MODEL=mxbai-embed-large` in `INFRA_BRAIN_ENV`.
-3. **Code fix (MR !197):** `get_embeddings()` defaults
+3. **Code fix:** `get_embeddings()` defaults
    `check_embedding_ctx_length=False` whenever `openai_base_url` is set, so raw
    strings are sent instead of token arrays. `setdefault` keeps caller override
    possible. The `dimensions=` pin stays (honored by real OpenAI/OpenRouter,

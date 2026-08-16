@@ -1,3 +1,18 @@
+# Frontend build stage: dashboard-app (Vite+React) -> static2/ bundle served at
+# /dashboard2 by FastAPI (src/infra_brain/main.py). Runs before the Python stages
+# so its output can be copied into the runtime image below.
+FROM node:20-slim AS frontend-builder
+
+WORKDIR /app/dashboard-app
+
+COPY dashboard-app/package.json dashboard-app/package-lock.json ./
+RUN npm ci
+
+COPY dashboard-app/ ./
+# outDir is ../src/infra_brain/dashboard/static2 (see vite.config.ts) —
+# resolves to /app/src/infra_brain/dashboard/static2 from this WORKDIR.
+RUN npm run build
+
 # Multi-stage build: builder stage with full dependencies
 FROM python:3.11-slim AS builder
 
@@ -86,6 +101,11 @@ COPY alembic.ini .
 # CLAUDE.md at read time; copying the tree just makes the allowed files present.
 COPY docs/ docs/
 COPY AGENTS.md README.md CHANGELOG.md ./
+
+# Built dashboard bundle (see frontend-builder stage above) — served at
+# /dashboard2 by src/infra_brain/main.py; without this the mount is skipped
+# and / (which redirects to /dashboard2) 404s.
+COPY --from=frontend-builder /app/src/infra_brain/dashboard/static2 src/infra_brain/dashboard/static2
 
 # Set Python environment variables
 ENV PYTHONPATH=/app/src
