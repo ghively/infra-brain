@@ -8,6 +8,12 @@ layer); drift detection, compliance, remediation, and a chat agent then
 operate on top of the graph. Built on LangChain + LangGraph + FastAPI +
 PostgreSQL + Redis, with a Vite+React dashboard.
 
+Two front doors onto the same data: the dashboard for a human, and an
+**MCP server** (see [`docs/MCP_SERVER.md`](docs/MCP_SERVER.md)) for an AI
+coding agent — Claude Code or any other MCP-compatible client — to query
+and act on directly, with the same read-only guarantee and its own
+per-key scoped auth.
+
 > **About this repository.** This is a sanitized, curated copy of a longer-running
 > personal project, published as a portfolio piece. Internal deployment
 > specifics (real hostnames, IPs, an internal GitLab instance, and the
@@ -165,6 +171,12 @@ path never depends on a model being configured.
   catalog (every value labeled by its source — env, database override, or
   default), collection runs, notifications, remediation, and more. Session-
   cookie auth over a `ui_users` table.
+- **MCP server for agent-driven operation:** 96 registered tools (77 read-only,
+  19 requiring write scope) behind per-key scoped bearer auth — a key's
+  `allowed_tools` list is checked against *every* requested tool name before
+  dispatch, keys are minted/revoked from the dashboard, and every call lands
+  in the audit log. Built so an AI coding agent can operate the system
+  directly, not just read about it.
 - **Bitwarden Secrets Manager integration:** only one bootstrap token is a
   deployment secret; everything else is pulled at startup.
 - **Fail-closed security defaults:** DLP scanning, gated webhook auth, an
