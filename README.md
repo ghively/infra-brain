@@ -136,12 +136,13 @@ path never depends on a model being configured.
 ## infra-ops: the agent fleet built on top of this
 
 Infra Brain's MCP server exists for a specific reason: it's the read-only
-intelligence layer for **infra-ops**, a companion Claude Code-native fleet of
-roughly two dozen specialized subagents that actually operate the
-infrastructure this project observes — IaC/Ansible authoring, CI/CD pipeline
-triage, network-edge and security/SIEM operations, storage/backup
-verification, EOL lifecycle planning, home-automation and media-stack
-operations, and more, each scoped to one domain.
+intelligence layer for **[infra-ops](https://github.com/ghively/infra-brain-ops)**,
+a companion Claude Code-native fleet of roughly two dozen specialized
+subagents that actually operate the infrastructure this project observes —
+IaC/Ansible authoring, CI/CD pipeline triage, network-edge and
+security/SIEM operations, storage/backup verification, EOL lifecycle
+planning, home-automation and media-stack operations, and more, each scoped
+to one domain.
 
 Every agent in that fleet shares the same discipline this repo enforces on
 itself: **propose, never dispose.** They call Infra Brain's MCP tools to read
@@ -150,12 +151,12 @@ by opening a reviewable GitLab MR or ticket, never a direct infrastructure
 change. Config, DNS, VLAN, firewall, and credential changes are human-gated
 by design, with no code path that lets an agent skip the review step.
 
-infra-ops is a separate, private codebase tied to a specific real deployment
-and isn't published here. It's mentioned because the two-tier split — a
-read-only knowledge platform underneath, a propose-only multi-agent
-operations layer on top, both genuinely AI-native rather than
-AI-assisted-in-name-only — is the actual shape of the project this repo is
-one half of.
+infra-ops is a separate codebase, sanitized the same way as this one and
+currently private (link above will 404 until it's made public). It's
+mentioned because the two-tier split — a read-only knowledge platform
+underneath, a propose-only multi-agent operations layer on top, both
+genuinely AI-native rather than AI-assisted-in-name-only — is the actual
+shape of the project this repo is one half of.
 
 ---
 
