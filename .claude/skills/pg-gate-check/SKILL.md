@@ -25,7 +25,7 @@ bash .claude/skills/pg-gate-check/run.sh
 PG_GATE_SKIP_ORM=1 bash .claude/skills/pg-gate-check/run.sh
 ```
 
-## Why this exists (real incident, 2026-07-21, MR !195 pipeline 1355)
+## Why this exists (a real incident)
 
 A feature branch adding a pgvector column passed the full local suite (2718 passed,
 0 failed), ruff, AND three specialist reviewers — then failed BOTH hard MR gates.
@@ -41,19 +41,19 @@ structurally invisible to every sqlite-based check:
    `compare_metadata` parity check flagged `remove_index` drift. **Every index/column
    a migration creates must be declared on the model** (the ORM is the source of truth).
 
-## Why gate 4 exists (real incident, 2026-08-12, MR !34 → hotfix MR !36)
+## Why gate 4 exists (a real incident)
 
 The first three gates all touch real PostgreSQL — but between them they only execute
 the **migration chain** and the **raw dashboard/chat SQL**. Agent-layer ORM queries
-(`agents/`, `etl/`) only ever met in-memory SQLite. TRK-350's event-shaped drift filter
+(`agents/`, `etl/`) only ever met in-memory SQLite. An event-shaped drift filter
 built a subquery with `.scalar_subquery()` and re-wrapped it in `select()`, compiling to
 `IN (SELECT (SELECT ...))`. PostgreSQL evaluates that inner select as a per-row scalar
 and raises `CardinalityViolation` as soon as it matches a second row. SQLite tolerates
-it. 5,215 tests passed; the FIRST live drift run after deploy crashed. TRK-322's
-`ROW_NUMBER()` work escaped only because those queries happened to live in files
+it. 5,215 tests passed; the FIRST live drift run after deploy crashed. A separate,
+similar `ROW_NUMBER()` query escaped only because it happened to live in a file
 `sql-execution-check` already covered.
 
-`agent-orm-check` (TRK-356) closes it: `PG_GATE_DSN` flips
+`agent-orm-check` closes it: `PG_GATE_DSN` flips
 `tests/support/pg.py::make_engine` from in-memory SQLite to the real container, and
 every module listed in **`tests/support/agent_orm_check_paths.txt`** re-runs
 unchanged against PostgreSQL. **No tests are duplicated** — the same modules run on

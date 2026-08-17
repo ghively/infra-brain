@@ -18,6 +18,8 @@ PostgreSQL + Redis, with a Vite+React dashboard.
 > itself: the agent framework, the graph engine, the dashboard, the test
 > suite, and the AI-native engineering tooling (`.claude/`) used to build it.
 
+![Infra Brain dashboard overview — fleet resource counts, open drift, sweep health, and a 7-day drift trend chart](docs/images/dashboard-screenshot.png)
+
 ## Read-Only Guarantee
 
 Infra Brain **never mutates the infrastructure it observes**. Read-only is

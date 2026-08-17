@@ -136,8 +136,9 @@ Break the request into atomic tasks. For each task, identify:
 - **Output** — what this task produces for downstream tasks
 - **Writes files?** — yes/no. Drives the Step 5 worktree-isolation decision.
 - **Declared file touches** — the specific files/dirs this task expects to write, with
-  any of the known shared files (`docs/TRACKER.md`, `AGENTS.md`, `config.py`,
-  `.env.example`, `supervisor.py` AGENT_REGISTRY, `scheduler.py` schedules) flagged
+  any of the known shared files (a findings tracker doc if one exists in this
+  repo, `AGENTS.md`, `config.py`, `.env.example`, `supervisor.py` AGENT_REGISTRY,
+  `scheduler.py` schedules) flagged
   explicitly. Two `implement` tasks declaring the same **non-shared** file → serialize
   them or re-cut the task boundary; overlap on a **shared** file is fine — Step 6's
   playbook handles it by convention, not by serialization.
@@ -279,8 +280,9 @@ HANDOFF day-close entries, and harden the table as evidence accumulates.
 files.** This is stricter than the `Workflow` tool's own default guidance ("isolate
 only when agents would otherwise conflict") — deliberately so, for this repo
 specifically: infra-brain tasks that look file-disjoint on paper converge on the same
-shared files in practice (every task logs a `docs/TRACKER.md` row; most touch
-`AGENTS.md`; any new flag touches `config.py`/`.env.example`). "Would otherwise
+shared files in practice (every task logs a row in the findings tracker, where one
+exists; most touch `AGENTS.md`; any new flag touches `config.py`/`.env.example`).
+"Would otherwise
 conflict" evaluates to true for nearly every pair of code-writing tasks here, so
 default-on isolation and the selective heuristic converge — default-on is just the
 version that doesn't depend on a fallible per-task prediction. It also costs almost
@@ -313,12 +315,12 @@ base is what makes §6's integration procedure mechanical.
 Every code-writing dispatch's prompt must include:
 
 - **Branch naming:** `wt/<batch-slug>/<task-id>-<short-name>` (e.g.
-  `wt/trk-117/T4-phase1-n1`). In `Workflow` mode, record the branch name it returns
-  instead.
+  `wt/findings-117/T4-phase1-n1`). In `Workflow` mode, record the branch name it
+  returns instead.
 - **Rules:** branch from BASE only; commit locally, small and focused; **never push,
   never switch branches, never rebase, never touch files outside the worktree.**
-- **Shared-file rule (§6.2):** do NOT edit `docs/TRACKER.md` or `AGENTS.md` — report
-  intended TRACKER row content / registry changes in the result instead.
+- **Shared-file rule (§6.2):** do NOT edit the findings tracker or `AGENTS.md` —
+  report intended tracker row content / registry changes in the result instead.
   `config.py`/`.env.example` edits must be additive-only (append a new field in its
   own clearly-delimited block; never reorder or refactor existing entries).
 - **Result contract (proof, not prose — extends F-015 to worktree outputs):** branch
@@ -391,7 +393,7 @@ touched `db/models/`, dialect-specific types, or raw SQL: `/pg-gate-check` befor
 
 | File | Rule for subagents | Integration handling |
 |---|---|---|
-| `docs/TRACKER.md` | **Never edited directly.** Each task reports its row(s)/status-changes as structured text in its result. | You write all rows in one commit after the last fold. Eliminates the single most frequent conflict source — every task logs here. |
+| findings tracker (if present) | **Never edited directly.** Each task reports its row(s)/status-changes as structured text in its result. | You write all rows in one commit after the last fold. Eliminates the single most frequent conflict source — every task logs here. |
 | `AGENTS.md` | Never hand-edited (it's generated from AgentSpec). | Regenerate once on `integration` after all folds — `python scripts/gen_agents_md.py`. |
 | `src/infra_brain/config.py` / `.env.example` | **Additive-only**: append new Settings fields / env entries in their own clearly-delimited block; never reorder, rename, or refactor existing entries. A config *refactor* is a singleton task, never scheduled parallel with anything else touching config. | Append/append conflicts at the same anchor resolve as keep-both-hunks; the fast-tier env-parity check catches semantic duplication. |
 | `supervisor.py` AGENT_REGISTRY / `scheduler.py` schedules | Additive-only; each task's decomposition row must declare the registry/schedule entries it will add, so cron-slot collisions are caught **at decomposition time** (Step 2), not at integration. | `agent-registry-sync` invariants in the fast tier. |
