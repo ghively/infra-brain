@@ -243,7 +243,12 @@ def test_list_governance_events_since_id_unknown_returns_empty(client):
 def test_list_client_state(client):
     client.post(
         "/api/internal/state/client-state",
-        json={"collection": "wave_failures", "entry_id": "w-1", "payload": {}, "client_id": "hook:x"},
+        json={
+            "collection": "wave_failures",
+            "entry_id": "w-1",
+            "payload": {},
+            "client_id": "hook:x",
+        },
         headers=AUTH,
     )
     resp = client.get(
@@ -290,9 +295,7 @@ def test_list_observations(client):
         json={"client_id": "hook:x", "agent": "sess-1", "tool": "bash", "domain": "general"},
         headers=AUTH,
     )
-    resp = client.get(
-        "/api/internal/state/observations", params={"agent": "sess-1"}, headers=AUTH
-    )
+    resp = client.get("/api/internal/state/observations", params={"agent": "sess-1"}, headers=AUTH)
     assert resp.status_code == 200
     assert len(resp.json()) == 1
     assert resp.json()[0]["agent"] == "sess-1"

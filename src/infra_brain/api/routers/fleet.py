@@ -172,9 +172,7 @@ def get_counts():
             s.query(ComplianceViolation).filter(ComplianceViolation.status == "open").count()
         )
         compliance_resolved = (
-            s.query(ComplianceViolation)
-            .filter(ComplianceViolation.status == "resolved")
-            .count()
+            s.query(ComplianceViolation).filter(ComplianceViolation.status == "resolved").count()
         )
         eol_overdue = (
             s.query(EolRegistry)
@@ -772,25 +770,30 @@ def get_fleet_asset_detail(asset_id: str):
         asset = s.get(R7Asset, aid)
         if asset is None:
             raise HTTPException(status_code=404, detail="Asset not found")
-        configs = s.query(R7AssetConfig).filter(R7AssetConfig.asset_id == aid).order_by(
-            R7AssetConfig.name
-        ).all()
-        users = s.query(R7AssetUser).filter(R7AssetUser.asset_id == aid).order_by(
-            R7AssetUser.username
-        ).all()
-        addresses = s.query(R7AssetAddress).filter(R7AssetAddress.asset_id == aid).order_by(
-            R7AssetAddress.ip
-        ).all()
+        configs = (
+            s.query(R7AssetConfig)
+            .filter(R7AssetConfig.asset_id == aid)
+            .order_by(R7AssetConfig.name)
+            .all()
+        )
+        users = (
+            s.query(R7AssetUser)
+            .filter(R7AssetUser.asset_id == aid)
+            .order_by(R7AssetUser.username)
+            .all()
+        )
+        addresses = (
+            s.query(R7AssetAddress)
+            .filter(R7AssetAddress.asset_id == aid)
+            .order_by(R7AssetAddress.ip)
+            .all()
+        )
         return R7AssetDetailOut(
             id=str(asset.id),
             hostname=asset.hostname or "",
             configs=[R7AssetConfigOut(name=c.name, value=c.value or "") for c in configs],
-            users=[
-                R7AssetUserOut(username=u.username, full_name=u.full_name or "") for u in users
-            ],
-            addresses=[
-                R7AssetAddressOut(ip=a.ip, mac=a.mac or "") for a in addresses
-            ],
+            users=[R7AssetUserOut(username=u.username, full_name=u.full_name or "") for u in users],
+            addresses=[R7AssetAddressOut(ip=a.ip, mac=a.mac or "") for a in addresses],
         )
 
 

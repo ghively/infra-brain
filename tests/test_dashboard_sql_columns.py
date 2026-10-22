@@ -191,7 +191,7 @@ def _validate_insert_or_update(sql: str, errors: list[str]) -> None:
         if table_cols is None:
             errors.append(f"UPDATE references unknown table '{table}'")
             return
-        set_clause = sql[set_match.end():]
+        set_clause = sql[set_match.end() :]
         where_split = re.split(r"\bWHERE\b", set_clause, maxsplit=1, flags=re.IGNORECASE)[0]
         for col in re.findall(r"\b([a-z_][a-z0-9_]*)\s*=", where_split):
             if col not in table_cols:
@@ -245,6 +245,7 @@ def test_validator_rejects_wrong_table_placement():
 # --------------------------------------------------------------------------- #
 # P7.3: INSERT/UPDATE column validation (api/routers/'s upsert statements)
 # --------------------------------------------------------------------------- #
+
 
 def test_insert_validator_accepts_real_columns():
     good = "INSERT INTO resources (id, name, domain, type, source) VALUES (:id, :name, :domain, :type, :source)"

@@ -571,9 +571,7 @@ def test_resource_snapshots_limit_and_offset_are_clamped(client, engine):
     assert data["limit"] == 1
     assert data["offset"] == 0
 
-    oversized = client.get(
-        f"/api/dashboard/resources/{resource_id}/snapshots?limit=100000"
-    ).json()
+    oversized = client.get(f"/api/dashboard/resources/{resource_id}/snapshots?limit=100000").json()
     assert oversized["limit"] == 500
 
 
@@ -779,7 +777,11 @@ def test_chat_streams_tool_and_provenance_frames(client):
     SSE frames, so an operator can tell an answer from a guess."""
 
     async def fake_events(graph, thread_id, message):
-        yield {"type": "tool", "name": "query_graph_neighborhood", "args": {"resource_id": "node_a"}}
+        yield {
+            "type": "tool",
+            "name": "query_graph_neighborhood",
+            "args": {"resource_id": "node_a"},
+        }
         yield {
             "type": "provenance",
             "tool": "query_graph_neighborhood",
@@ -829,9 +831,7 @@ def test_chat_rejects_oversized_message(client):
     before it can be sent to — and billed by — the provider."""
     from infra_brain.chat.limits import CHAT_MAX_MESSAGE_CHARS
 
-    resp = client.post(
-        "/api/dashboard/chat", json={"message": "x" * (CHAT_MAX_MESSAGE_CHARS + 1)}
-    )
+    resp = client.post("/api/dashboard/chat", json={"message": "x" * (CHAT_MAX_MESSAGE_CHARS + 1)})
     assert resp.status_code == 422
 
 

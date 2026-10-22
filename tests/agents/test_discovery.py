@@ -411,9 +411,7 @@ def test_discovery_finalization_retries_transient_validation_failure():
     from pydantic import ValidationError as PydanticValidationError
 
     mock_session = _make_mock_session([])
-    good = DiscoveryFindingList(
-        findings=[DiscoveryFinding(hostname="srv-z", evidence="rapid7")]
-    )
+    good = DiscoveryFindingList(findings=[DiscoveryFinding(hostname="srv-z", evidence="rapid7")])
 
     # Build a real ValidationError instance to exercise the retryable path.
     try:
@@ -422,9 +420,7 @@ def test_discovery_finalization_retries_transient_validation_failure():
     except PydanticValidationError as e:
         bad_validation_error = e
 
-    patcher, model = _patch_structured(
-        None, side_effect=[bad_validation_error, good]
-    )
+    patcher, model = _patch_structured(None, side_effect=[bad_validation_error, good])
 
     with (
         patch.object(DiscoveryAgent, "reason", return_value="Found srv-z via rapid7 scan."),

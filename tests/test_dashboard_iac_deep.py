@@ -59,41 +59,80 @@ def client(engine, monkeypatch):
 
 def _seed(engine):
     with Session(engine) as s:
-        proj = GitlabProject(gitlab_project_id=1, name="infra-repo", path_with_namespace="ops/infra-repo")
+        proj = GitlabProject(
+            gitlab_project_id=1, name="infra-repo", path_with_namespace="ops/infra-repo"
+        )
         s.add(proj)
         s.flush()
         compose_file = IacFile(
-            gitlab_project_id=1, project_name="infra-repo", path="docker-compose.yml",
-            file_type="compose", ref="main",
+            gitlab_project_id=1,
+            project_name="infra-repo",
+            path="docker-compose.yml",
+            file_type="compose",
+            ref="main",
         )
         k8s_file = IacFile(
-            gitlab_project_id=1, project_name="infra-repo", path="k8s/deploy.yaml",
-            file_type="k8s_manifest", ref="main",
+            gitlab_project_id=1,
+            project_name="infra-repo",
+            path="k8s/deploy.yaml",
+            file_type="k8s_manifest",
+            ref="main",
         )
         tf_file = IacFile(
-            gitlab_project_id=1, project_name="infra-repo", path="main.tf",
-            file_type="terraform", ref="main",
+            gitlab_project_id=1,
+            project_name="infra-repo",
+            path="main.tf",
+            file_type="terraform",
+            ref="main",
         )
         ansible_file = IacFile(
-            gitlab_project_id=1, project_name="infra-repo", path="site.yml",
-            file_type="playbook", ref="main",
+            gitlab_project_id=1,
+            project_name="infra-repo",
+            path="site.yml",
+            file_type="playbook",
+            ref="main",
         )
         inv_file = IacFile(
-            gitlab_project_id=1, project_name="infra-repo", path="inventory.ini",
-            file_type="inventory", ref="main",
+            gitlab_project_id=1,
+            project_name="infra-repo",
+            path="inventory.ini",
+            file_type="inventory",
+            ref="main",
         )
         s.add_all([compose_file, k8s_file, tf_file, ansible_file, inv_file])
         s.flush()
 
-        s.add(ComposeService(iac_file_id=compose_file.id, service_name="web", image="nginx:1.27", ports=["80:80"]))
+        s.add(
+            ComposeService(
+                iac_file_id=compose_file.id, service_name="web", image="nginx:1.27", ports=["80:80"]
+            )
+        )
         s.add(ComposeService(iac_file_id=compose_file.id, service_name="db", image="postgres:16"))
 
-        s.add(K8sManifestResource(iac_file_id=k8s_file.id, kind="Deployment", name="api", namespace="prod", api_version="apps/v1"))
-        s.add(K8sManifestResource(iac_file_id=k8s_file.id, kind="Service", name="api-svc", namespace="prod"))
+        s.add(
+            K8sManifestResource(
+                iac_file_id=k8s_file.id,
+                kind="Deployment",
+                name="api",
+                namespace="prod",
+                api_version="apps/v1",
+            )
+        )
+        s.add(
+            K8sManifestResource(
+                iac_file_id=k8s_file.id, kind="Service", name="api-svc", namespace="prod"
+            )
+        )
 
-        s.add(TerraformResource(iac_file_id=tf_file.id, resource_type="aws_instance", resource_name="web01"))
+        s.add(
+            TerraformResource(
+                iac_file_id=tf_file.id, resource_type="aws_instance", resource_name="web01"
+            )
+        )
 
-        play = AnsiblePlaybookPlay(iac_file_id=ansible_file.id, play_index=0, name="Deploy web", hosts=["webservers"])
+        play = AnsiblePlaybookPlay(
+            iac_file_id=ansible_file.id, play_index=0, name="Deploy web", hosts=["webservers"]
+        )
         s.add(play)
 
         grp = AnsibleInventoryGroup(iac_file_id=inv_file.id, name="webservers")
@@ -104,10 +143,17 @@ def _seed(engine):
         res = Resource(name=".gitlab-ci.yml", domain="iac", type="ci_file", source="gitlab")
         s.add(res)
         s.flush()
-        s.add(CiSchedule(
-            resource_id=res.id, project_id=1, schedule_id=55,
-            description="Nightly build", ref="main", cron="0 4 * * *", active=True,
-        ))
+        s.add(
+            CiSchedule(
+                resource_id=res.id,
+                project_id=1,
+                schedule_id=55,
+                description="Nightly build",
+                ref="main",
+                cron="0 4 * * *",
+                active=True,
+            )
+        )
         s.commit()
 
 
@@ -123,21 +169,29 @@ def test_iac_overview_file_type_counts_pushed_to_sql_group_by(client, engine):
     from sqlalchemy import event
 
     with Session(engine) as s:
-        proj = GitlabProject(gitlab_project_id=1, name="infra-repo", path_with_namespace="ops/infra-repo")
+        proj = GitlabProject(
+            gitlab_project_id=1, name="infra-repo", path_with_namespace="ops/infra-repo"
+        )
         s.add(proj)
         s.flush()
         for i in range(4):
             s.add(
                 IacFile(
-                    gitlab_project_id=1, project_name="infra-repo",
-                    path=f"compose-{i}.yml", file_type="compose", ref="main",
+                    gitlab_project_id=1,
+                    project_name="infra-repo",
+                    path=f"compose-{i}.yml",
+                    file_type="compose",
+                    ref="main",
                 )
             )
         for i in range(3):
             s.add(
                 IacFile(
-                    gitlab_project_id=1, project_name="infra-repo",
-                    path=f"k8s-{i}.yaml", file_type="k8s_manifest", ref="main",
+                    gitlab_project_id=1,
+                    project_name="infra-repo",
+                    path=f"k8s-{i}.yaml",
+                    file_type="k8s_manifest",
+                    ref="main",
                 )
             )
         s.commit()
@@ -191,8 +245,12 @@ def test_iac_overview_pipeline_run_lookup_is_bounded_per_project(client, engine)
     from infra_brain.db.models import CiPipelineRun
 
     with Session(engine) as s:
-        proj1 = GitlabProject(gitlab_project_id=1, name="infra-repo", path_with_namespace="ops/infra-repo")
-        proj2 = GitlabProject(gitlab_project_id=2, name="other-repo", path_with_namespace="ops/other-repo")
+        proj1 = GitlabProject(
+            gitlab_project_id=1, name="infra-repo", path_with_namespace="ops/infra-repo"
+        )
+        proj2 = GitlabProject(
+            gitlab_project_id=2, name="other-repo", path_with_namespace="ops/other-repo"
+        )
         s.add_all([proj1, proj2])
         s.flush()
         # 8 runs each for 2 projects -- more than the "latest 5" window, so
@@ -240,9 +298,7 @@ def test_iac_overview_pipeline_run_lookup_is_bounded_per_project(client, engine)
         if sql.strip().lower().startswith("select") and "ci_pipeline_runs" in sql.lower()
     ]
     assert ci_selects, "expected iac_overview to query ci_pipeline_runs at all"
-    assert any(
-        "over" in sql.lower() and "partition" in sql.lower() for sql in ci_selects
-    ), (
+    assert any("over" in sql.lower() and "partition" in sql.lower() for sql in ci_selects), (
         "iac_overview must push the per-project latest-N selection into SQL "
         "(a window function) instead of pulling every ci_pipeline_runs row "
         "for every project into Python"

@@ -237,9 +237,7 @@ def test_resolve_drift_events_calls_analyze_hook_with_resolved_count(
         s.commit()
 
     with patch("infra_brain.mcp_server._maybe_analyze_after_bulk_write") as hook:
-        res = mcp_server.resolve_drift_events(
-            resolution="fixed", domain="linux", dry_run=False
-        )
+        res = mcp_server.resolve_drift_events(resolution="fixed", domain="linux", dry_run=False)
 
     assert res["resolved"] == 5
     hook.assert_called_once()

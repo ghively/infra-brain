@@ -93,9 +93,7 @@ def _strip_secret_fields(record):
     """
     if isinstance(record, dict):
         return {
-            k: _strip_secret_fields(v)
-            for k, v in record.items()
-            if k.lower() not in _SECRET_FIELDS
+            k: _strip_secret_fields(v) for k, v in record.items() if k.lower() not in _SECRET_FIELDS
         }
     if isinstance(record, list):
         return [_strip_secret_fields(v) for v in record]

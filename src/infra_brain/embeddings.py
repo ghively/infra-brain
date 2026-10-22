@@ -145,7 +145,9 @@ def get_embeddings(**kwargs: Any):
             # equals EMBEDDING_DIM (a no-op slice + idempotent renormalize).
             inner = OpenAIEmbeddings(**embed_kwargs, **kwargs)
             return _TruncatedEmbeddings(
-                inner, settings.embedding_dim, pacing_seconds=settings.embedding_batch_pacing_seconds
+                inner,
+                settings.embedding_dim,
+                pacing_seconds=settings.embedding_batch_pacing_seconds,
             )
         # Official OpenAI: `dimensions` is well-supported and is the only way
         # to get a non-native width out of e.g. text-embedding-3-*.

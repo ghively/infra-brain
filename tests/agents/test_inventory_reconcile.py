@@ -249,7 +249,7 @@ def test_mr_disabled_writes_no_proposed_event(patched_session):
     with Session(engine) as s:
         events = s.query(InventoryReconcileEvent).all()
     assert events == [], (
-        "MR-disabled must not write a status=\"proposed\" event with mr_url=None — "
+        'MR-disabled must not write a status="proposed" event with mr_url=None — '
         f"got {[(e.host, e.status, e.mr_url) for e in events]}"
     )
 

@@ -124,9 +124,7 @@ def record_client_state(
             "client_id": row.client_id,
             "created_at": row.created_at.isoformat(),
         }
-    logger.info(
-        "client_state: recorded %s entry %s for client %s", collection, entry_id, client_id
-    )
+    logger.info("client_state: recorded %s entry %s for client %s", collection, entry_id, client_id)
     return result
 
 

@@ -635,9 +635,7 @@ class HostIdentity(Base):
     patch_status: Mapped[str | None] = mapped_column(String(64), nullable=True)
     vsphere_power_state: Mapped[str | None] = mapped_column(String(32), nullable=True)
     octopus_machine_status: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    last_reconciled: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_reconciled: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     #: KG-2: source labels (``r7``, ``vsphere``, …) whose leg for this
     #: ``short_hostname`` had a SAME-SOURCE identity collision in the MOST
     #: RECENT reconcile run — two rows from one source table normalizing to this

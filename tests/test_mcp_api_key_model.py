@@ -1,4 +1,5 @@
 """McpApiKey ORM model — schema shape and defaults."""
+
 import uuid
 from datetime import datetime
 

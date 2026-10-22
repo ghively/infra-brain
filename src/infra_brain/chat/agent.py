@@ -510,9 +510,7 @@ async def stream_response(
             yield event["text"]
 
 
-async def answer_message(
-    graph, thread_id: str, message: str, config: dict | None = None
-) -> str:
+async def answer_message(graph, thread_id: str, message: str, config: dict | None = None) -> str:
     """Non-streaming convenience wrapper over ``stream_response`` — joins every
     token into a single reply string.
 

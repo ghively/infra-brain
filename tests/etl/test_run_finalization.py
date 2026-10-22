@@ -208,8 +208,7 @@ def test_run_resets_resources_found_on_mid_batch_rollback():
         )
         # Confirm the rollback actually happened: host01 was never persisted.
         assert (
-            s.query(Resource).filter_by(domain="test_partial_boom", name="host01").first()
-            is None
+            s.query(Resource).filter_by(domain="test_partial_boom", name="host01").first() is None
         )
 
 

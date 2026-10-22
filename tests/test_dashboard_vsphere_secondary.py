@@ -63,9 +63,31 @@ def test_secondary_empty_state(client):
 def test_secondary_returns_all_seven_categories(client, engine):
     now = datetime.now(timezone.utc)
     with Session(engine) as s:
-        s.add(VsphereNetwork(vcenter="vc1", moref="net-1", name="VM Network", network_kind="portgroup", accessible=True, vm_count=3))
-        s.add(VsphereResourcePool(vcenter="vc1", moref="rp-1", name="Prod Pool", cpu_limit=-1, vm_count=5))
-        s.add(VsphereVmDisk(vcenter="vc1", vm_moref="vm-1", vm_name="app-01", disk_key=0, label="Hard disk 1", capacity_gb=100.0))
+        s.add(
+            VsphereNetwork(
+                vcenter="vc1",
+                moref="net-1",
+                name="VM Network",
+                network_kind="portgroup",
+                accessible=True,
+                vm_count=3,
+            )
+        )
+        s.add(
+            VsphereResourcePool(
+                vcenter="vc1", moref="rp-1", name="Prod Pool", cpu_limit=-1, vm_count=5
+            )
+        )
+        s.add(
+            VsphereVmDisk(
+                vcenter="vc1",
+                vm_moref="vm-1",
+                vm_name="app-01",
+                disk_key=0,
+                label="Hard disk 1",
+                capacity_gb=100.0,
+            )
+        )
         s.add(
             VsphereSnapshot(
                 vcenter="vc1",
@@ -77,10 +99,34 @@ def test_secondary_returns_all_seven_categories(client, engine):
                 is_current=True,
             )
         )
-        s.add(VsphereSnapshot(vcenter="vc1", vm_moref="vm-2", vm_name="app-02", snapshot_id=1, name="fresh", age_days=1))
-        s.add(VsphereLicense(vcenter="vc1", name="vSphere Enterprise Plus", total=10, used=7, expiration=now))
-        s.add(VsphereAlarm(vcenter="vc1", alarm_name="Host connection lost", entity_name="esxi-01", overall_status="red"))
-        s.add(VspherePermission(vcenter="vc1", principal="DOMAIN\\admins", role_name="Administrator", is_group=True))
+        s.add(
+            VsphereSnapshot(
+                vcenter="vc1",
+                vm_moref="vm-2",
+                vm_name="app-02",
+                snapshot_id=1,
+                name="fresh",
+                age_days=1,
+            )
+        )
+        s.add(
+            VsphereLicense(
+                vcenter="vc1", name="vSphere Enterprise Plus", total=10, used=7, expiration=now
+            )
+        )
+        s.add(
+            VsphereAlarm(
+                vcenter="vc1",
+                alarm_name="Host connection lost",
+                entity_name="esxi-01",
+                overall_status="red",
+            )
+        )
+        s.add(
+            VspherePermission(
+                vcenter="vc1", principal="DOMAIN\\admins", role_name="Administrator", is_group=True
+            )
+        )
         s.commit()
 
     resp = client.get("/api/vsphere/secondary")

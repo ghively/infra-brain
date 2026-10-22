@@ -825,9 +825,7 @@ def test_draft_plan_prompt_includes_derived_metric_hint_for_vuln_risk_score():
     resource = Resource(domain="vuln", type="host", name="COLPT8842LR3", source="VulnAgent")
 
     with patch.object(type(agent), "reason", return_value="plan text") as mock_reason:
-        agent._draft_plan(
-            "COLPT8842LR3", "risk_score", 1849455, 276341, resource=resource
-        )
+        agent._draft_plan("COLPT8842LR3", "risk_score", 1849455, 276341, resource=resource)
 
     prompt = mock_reason.call_args.args[0]
     assert "vuln" in prompt
@@ -899,7 +897,9 @@ def test_confidence_unchanged_for_configurable_field(patched_session):
     _seed_open_drift(engine)  # field="kernel", a configurable setting
 
     with patch.object(
-        __import__("infra_brain.agents.remediation", fromlist=["RemediationAgent"]).RemediationAgent,
+        __import__(
+            "infra_brain.agents.remediation", fromlist=["RemediationAgent"]
+        ).RemediationAgent,
         "reason",
         return_value="plan text",
     ):
@@ -1111,9 +1111,7 @@ def _seed_compliance_gap(engine, status="approved", **payload_overrides):
     payload = {
         "rule_domain": payload_overrides.get("rule_domain", "backup_retention"),
         "condition_type": payload_overrides.get("condition_type", "missing_verification"),
-        "description": payload_overrides.get(
-            "description", "no backup verification check exists"
-        ),
+        "description": payload_overrides.get("description", "no backup verification check exists"),
     }
     with Session(engine) as s:
         action = ProposedAction(

@@ -24,8 +24,13 @@ def test_request_id_var_set_and_reset():
 
 def test_filter_attaches_request_id_when_set():
     record = logging.LogRecord(
-        name="infra_brain.test", level=logging.INFO, pathname=__file__,
-        lineno=1, msg="hello", args=(), exc_info=None,
+        name="infra_brain.test",
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=1,
+        msg="hello",
+        args=(),
+        exc_info=None,
     )
     token = request_id_var.set("req-xyz")
     try:
@@ -38,8 +43,13 @@ def test_filter_attaches_request_id_when_set():
 
 def test_filter_does_not_attach_request_id_when_unset():
     record = logging.LogRecord(
-        name="infra_brain.test", level=logging.INFO, pathname=__file__,
-        lineno=1, msg="hello", args=(), exc_info=None,
+        name="infra_brain.test",
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=1,
+        msg="hello",
+        args=(),
+        exc_info=None,
     )
     result = RequestIdLogFilter().filter(record)
     assert result is True

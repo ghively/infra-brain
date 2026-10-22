@@ -307,9 +307,7 @@ def test_chatops_enabled_but_secrets_unconfigured_still_403(client):
     body = json.dumps({"type": "url_verification", "challenge": "abc"}).encode()
     with patch(
         "infra_brain.api.routers.chatops.get_settings",
-        return_value=_patched_settings(
-            slack_signing_secret="", teams_outgoing_webhook_secret=""
-        ),
+        return_value=_patched_settings(slack_signing_secret="", teams_outgoing_webhook_secret=""),
     ):
         resp = client.post(
             "/webhooks/chatops/slack/events",

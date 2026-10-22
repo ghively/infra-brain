@@ -57,10 +57,12 @@ def _seed_disappearance(eng, rtype: str, name: str, domain: str = "linux"):
     """One resource observed in run 1, then absent from run 2 (the latest)."""
     with Session(eng) as s:
         r = Resource(id=uuid.uuid4(), domain=domain, type=rtype, name=name, source="test")
-        run1 = CollectionRun(id=uuid.uuid4(), domain=domain, trigger_type="scheduled",
-                             status="completed")
-        run2 = CollectionRun(id=uuid.uuid4(), domain=domain, trigger_type="scheduled",
-                             status="completed")
+        run1 = CollectionRun(
+            id=uuid.uuid4(), domain=domain, trigger_type="scheduled", status="completed"
+        )
+        run2 = CollectionRun(
+            id=uuid.uuid4(), domain=domain, trigger_type="scheduled", status="completed"
+        )
         s.add_all([r, run1, run2])
         s.flush()
         s.add(Snapshot(id=uuid.uuid4(), resource_id=r.id, run_id=run1.id, snapshot={}))
@@ -84,9 +86,10 @@ def test_a_disappeared_host_fires_an_ops_alert():
     eng = _engine()
     _seed_disappearance(eng, "linux_host", "media_host")
 
-    with patch(f"{MODULE}.send_ops_alert", create=True) as _unused, patch(
-        "infra_brain.tools.ops_webhook.send_ops_alert"
-    ) as alert:
+    with (
+        patch(f"{MODULE}.send_ops_alert", create=True) as _unused,
+        patch("infra_brain.tools.ops_webhook.send_ops_alert") as alert,
+    ):
         retired = _run_detect(eng)
 
     assert len(retired) == 1
@@ -171,19 +174,27 @@ def _seed_two_snapshots(eng, rtype: str, name: str, domain: str = "wazuh"):
     """One resource with TWO differing snapshots — genuine diffable change."""
     with Session(eng) as s:
         r = Resource(id=uuid.uuid4(), domain=domain, type=rtype, name=name, source="test")
-        run1 = CollectionRun(id=uuid.uuid4(), domain=domain, trigger_type="scheduled",
-                             status="completed")
-        run2 = CollectionRun(id=uuid.uuid4(), domain=domain, trigger_type="scheduled",
-                             status="completed")
+        run1 = CollectionRun(
+            id=uuid.uuid4(), domain=domain, trigger_type="scheduled", status="completed"
+        )
+        run2 = CollectionRun(
+            id=uuid.uuid4(), domain=domain, trigger_type="scheduled", status="completed"
+        )
         s.add_all([r, run1, run2])
         s.flush()
         run1.finished_at = run1.started_at
         run2.started_at = run1.started_at + timedelta(minutes=5)
         run2.finished_at = run2.started_at
-        s.add(Snapshot(id=uuid.uuid4(), resource_id=r.id, run_id=run1.id,
-                       snapshot={"agent_name": "old"}))
-        s.add(Snapshot(id=uuid.uuid4(), resource_id=r.id, run_id=run2.id,
-                       snapshot={"agent_name": "new"}))
+        s.add(
+            Snapshot(
+                id=uuid.uuid4(), resource_id=r.id, run_id=run1.id, snapshot={"agent_name": "old"}
+            )
+        )
+        s.add(
+            Snapshot(
+                id=uuid.uuid4(), resource_id=r.id, run_id=run2.id, snapshot={"agent_name": "new"}
+            )
+        )
         s.commit()
         return r.id
 
@@ -236,8 +247,15 @@ def test_detect_all_survives_a_fleet_of_event_shaped_resources():
     _seed_two_snapshots(eng, "wazuh_alert", "sshd: authentication failure.")
     _seed_two_snapshots(eng, "wazuh_alert", "PAM: Login session opened.")
     with Session(eng) as s:
-        s.add(DriftEvent(id=uuid.uuid4(), resource_id=first, drift_type="config_drift",
-                         field="agent_name", status="open"))
+        s.add(
+            DriftEvent(
+                id=uuid.uuid4(),
+                resource_id=first,
+                drift_type="config_drift",
+                field="agent_name",
+                status="open",
+            )
+        )
         s.commit()
 
     agent = DriftDetector()
@@ -282,9 +300,15 @@ def test_existing_event_shaped_drift_rows_self_heal():
     other = _seed_two_snapshots(eng, "wazuh_alert", "sshd: authentication failure.")
     with Session(eng) as s:
         for resource_id in (rid, other):
-            s.add(DriftEvent(id=uuid.uuid4(), resource_id=resource_id,
-                             drift_type="config_drift", field="agent_name",
-                             status="open"))
+            s.add(
+                DriftEvent(
+                    id=uuid.uuid4(),
+                    resource_id=resource_id,
+                    drift_type="config_drift",
+                    field="agent_name",
+                    status="open",
+                )
+            )
         s.commit()
 
     agent = DriftDetector()

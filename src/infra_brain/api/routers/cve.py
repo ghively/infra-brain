@@ -223,8 +223,7 @@ def get_cve_detail(cve_id: str):
     try:
         with get_session() as s:
             slugs = [
-                r[0]
-                for r in s.query(R7VulnCve.r7_vuln_id).filter(R7VulnCve.cve_id == cve_id).all()
+                r[0] for r in s.query(R7VulnCve.r7_vuln_id).filter(R7VulnCve.cve_id == cve_id).all()
             ]
             if not slugs:
                 raise HTTPException(status_code=404, detail=f"CVE {cve_id} not found")

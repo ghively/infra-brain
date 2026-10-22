@@ -628,7 +628,6 @@ def test_qualified_name_unchanged_when_no_collision():
     identical behaviour to before #184 (the overwhelming common case)."""
     from sqlalchemy.orm import Session
 
-
     engine = make_engine()
     agent, _ = _make_agent()
 
@@ -642,7 +641,6 @@ def test_qualified_name_reprocessing_same_object_is_unchanged():
     """Re-sweeping the SAME object (same moref) on a later run must not be
     treated as a collision against itself."""
     from sqlalchemy.orm import Session
-
 
     engine = make_engine()
     agent, _ = _make_agent()
@@ -661,7 +659,6 @@ def test_qualified_name_disambiguates_same_name_different_moref():
     upsert silently overwrote the first object's data. A detected collision
     (existing row's stored moref differs) now gets a moref suffix instead."""
     from sqlalchemy.orm import Session
-
 
     engine = make_engine()
     agent, _ = _make_agent()
@@ -1225,9 +1222,7 @@ def test_phase_f_multiple_scoped_fetch_failures_all_surface():
         patch("infra_brain.tools.vsphere.collect_datacenters", return_value=[]),
         patch("infra_brain.tools.vsphere.collect_networks", return_value=[]),
         patch("infra_brain.tools.vsphere.collect_resource_pools", return_value=[]),
-        patch(
-            "infra_brain.tools.vsphere.collect_licenses", side_effect=Exception("licenses boom")
-        ),
+        patch("infra_brain.tools.vsphere.collect_licenses", side_effect=Exception("licenses boom")),
         patch(
             "infra_brain.tools.vsphere.collect_triggered_alarms",
             side_effect=Exception("alarms boom"),
@@ -1236,9 +1231,7 @@ def test_phase_f_multiple_scoped_fetch_failures_all_surface():
             "infra_brain.tools.vsphere.collect_permissions",
             side_effect=Exception("permissions boom"),
         ),
-        patch(
-            "infra_brain.tools.vsphere.collect_sessions", side_effect=Exception("sessions boom")
-        ),
+        patch("infra_brain.tools.vsphere.collect_sessions", side_effect=Exception("sessions boom")),
     ):
         errors: list[str] = []
         agent._collect_vcenter("vc1.example.com", settings, scope="all", errors=errors)

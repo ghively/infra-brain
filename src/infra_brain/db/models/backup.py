@@ -50,9 +50,7 @@ class BackupJob(Base):
     # The job/policy name as reported by the backend (e.g. Veeam job name,
     # Bacula job name, cloud snapshot policy id).
     job_name: Mapped[str] = mapped_column(String(256), nullable=False)
-    last_success_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Chaos/DR-test tracking (issue #96 scope: folded into this table, not a
     # separate table/agent) — most recent successful restore/DR test for
     # this job, if any has ever been recorded. NULL means "never tested".

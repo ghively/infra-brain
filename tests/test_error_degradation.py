@@ -11,7 +11,6 @@ Phase 1.1 regime (catch-all REMOVED):
   * Non-DB exceptions (ValueError, KeyError) → HTTP 500 (no masking).
 """
 
-
 from contextlib import contextmanager as _contextmanager
 from unittest.mock import patch as _patch
 
@@ -145,8 +144,6 @@ def test_non_db_exception_returns_500():
 # ---------------------------------------------------------------------------
 
 
-
-
 def _app_with_real_vuln_router() -> FastAPI:
     """Mini app mounting the REAL vuln_router (not a fixture stand-in).
 
@@ -171,9 +168,7 @@ def _raising_session():
     directly in the route body — here it's raised from the session context
     manager instead, since that's the real call site in ``vuln.py``.
     """
-    raise ProgrammingError(
-        "SELECT ...", {}, Exception("relation proposed_actions does not exist")
-    )
+    raise ProgrammingError("SELECT ...", {}, Exception("relation proposed_actions does not exist"))
     yield  # pragma: no cover - unreachable; keeps this a generator-based CM
 
 
@@ -187,9 +182,7 @@ def test_remediation_detail_view_degrades_on_db_error():
     client = TestClient(_app_with_real_vuln_router(), raise_server_exceptions=False)
     with _patch("infra_brain.api.routers.vuln.get_session", _raising_session):
         resp = client.get("/api/dashboard/remediation")
-    assert resp.status_code == 200, (
-        f"Expected degraded 200, got {resp.status_code}: {resp.text}"
-    )
+    assert resp.status_code == 200, f"Expected degraded 200, got {resp.status_code}: {resp.text}"
     body = resp.json()
     assert body.get("items") == []
     assert body.get("total") == 0
@@ -201,9 +194,7 @@ def test_remediation_rollup_view_degrades_on_db_error():
     client = TestClient(_app_with_real_vuln_router(), raise_server_exceptions=False)
     with _patch("infra_brain.api.routers.vuln.get_session", _raising_session):
         resp = client.get("/api/dashboard/remediation?view=rollup")
-    assert resp.status_code == 200, (
-        f"Expected degraded 200, got {resp.status_code}: {resp.text}"
-    )
+    assert resp.status_code == 200, f"Expected degraded 200, got {resp.status_code}: {resp.text}"
     body = resp.json()
     assert body.get("items") == []
     assert body.get("total") == 0

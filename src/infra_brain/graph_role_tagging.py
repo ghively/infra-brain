@@ -389,9 +389,7 @@ def emit_roles_from_hostname(session: Any) -> tuple[int, dict[Any, str]]:
 # ---------------------------------------------------------------------------
 
 
-def emit_roles_from_annotation(
-    session: Any, already_claimed: dict[Any, str] | None = None
-) -> int:
+def emit_roles_from_annotation(session: Any, already_claimed: dict[Any, str] | None = None) -> int:
     """Pass 2: keyword-match ``vsphere_vms.annotation`` against the taxonomy.
 
     ``already_claimed`` (typically the ``claimed`` dict returned by

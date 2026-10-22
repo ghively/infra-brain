@@ -294,9 +294,7 @@ def test_octopus_write_deep_returns_row_count(make_agent, sqlite_engine, session
         patch("infra_brain.agents.octopus.octopus_teams_tool") as mock_teams,
         patch("infra_brain.agents.octopus.octopus_users_tool") as mock_users,
         patch("infra_brain.agents.octopus.octopus_interruptions_tool") as mock_interruptions,
-        patch(
-            "infra_brain.agents.octopus.octopus_library_variable_sets_tool"
-        ) as mock_libsets,
+        patch("infra_brain.agents.octopus.octopus_library_variable_sets_tool") as mock_libsets,
         patch("infra_brain.agents.octopus.octopus_tasks_tool") as mock_tasks,
     ):
         mock_projects.invoke.return_value = []

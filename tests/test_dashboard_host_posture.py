@@ -98,7 +98,11 @@ def test_posture_returns_all_five_categories(client, engine):
         )
         s.add(HostShare(resource_id=rid, share_type="smb", name="C$", path="C:\\"))
         s.add(WindowsLocalUser(resource_id=rid, username="Administrator", is_admin=True))
-        s.add(WindowsLocalGroupMember(resource_id=rid, group_name="Administrators", member_name="Administrator"))
+        s.add(
+            WindowsLocalGroupMember(
+                resource_id=rid, group_name="Administrators", member_name="Administrator"
+            )
+        )
         s.commit()
 
     resp = client.get(f"/api/dashboard/resources/{rid}/posture")

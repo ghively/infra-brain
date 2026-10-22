@@ -49,12 +49,18 @@ def client(engine, monkeypatch):
 def _seed(engine):
     with Session(engine) as s:
         d1 = Document(
-            title="Runbook: Postgres Failover", sensitivity="internal",
-            source="confluence", space="OPS", status="current",
+            title="Runbook: Postgres Failover",
+            sensitivity="internal",
+            source="confluence",
+            space="OPS",
+            status="current",
         )
         d2 = Document(
-            title="PCI Scope Definition", sensitivity="restricted",
-            source="confluence", space="COMPLIANCE", status="stale",
+            title="PCI Scope Definition",
+            sensitivity="restricted",
+            source="confluence",
+            space="COMPLIANCE",
+            status="stale",
         )
         s.add_all([d1, d2])
         s.flush()

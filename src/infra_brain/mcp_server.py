@@ -730,8 +730,12 @@ def _record_auth_denial(token: str, tool_names: list[str] | None, reason: str) -
                     # digit run straddling the 128-char cut can never survive
                     # as an unmatched fragment — same order as args_summary
                     # below and mcp_audit_middleware._summarize_args().
-                    tool=redact_pans_preserving_uuids(",".join(requested) if requested else "unknown")[:128],
-                    args_summary=redact_pans_preserving_uuids(json.dumps({"requested_tools": requested}))[:2000],
+                    tool=redact_pans_preserving_uuids(
+                        ",".join(requested) if requested else "unknown"
+                    )[:128],
+                    args_summary=redact_pans_preserving_uuids(
+                        json.dumps({"requested_tools": requested})
+                    )[:2000],
                     verdict="deny",
                     status="denied",
                     error=reason,
@@ -4804,7 +4808,8 @@ def record_compliance_gap(
             payload={
                 "rule_domain": rule_domain,
                 "condition_type": condition_type,
-                "description": _manual_banner(author) + redact_pans_preserving_uuids(description.strip()),
+                "description": _manual_banner(author)
+                + redact_pans_preserving_uuids(description.strip()),
                 "source": MANUAL_PROVENANCE_SOURCE,
                 "authored_by": author,
             },

@@ -57,7 +57,9 @@ def _iso(created_at: datetime) -> str:
     return created_at.isoformat()
 
 
-def _row_hash(prev_hash: Optional[str], event_type: str, payload: dict, created_at: datetime) -> str:
+def _row_hash(
+    prev_hash: Optional[str], event_type: str, payload: dict, created_at: datetime
+) -> str:
     """sha256 hex of prev_hash-or-empty-string + event_type +
     json.dumps(payload, sort_keys=True) + created_at.isoformat().
 
@@ -83,7 +85,9 @@ def _serialize(row: GovernanceEvent) -> dict:
     }
 
 
-def record_governance_event(client_id: str, event_type: str, payload: Optional[dict] = None) -> dict:
+def record_governance_event(
+    client_id: str, event_type: str, payload: Optional[dict] = None
+) -> dict:
     """Append one hash-chained row to the governance_events ledger.
 
     Attribution: ``client_id`` is REQUIRED and must be a non-empty string —

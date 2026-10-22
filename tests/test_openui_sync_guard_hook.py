@@ -33,40 +33,50 @@ def _run_hook(payload: dict) -> str:
 
 
 def test_fires_on_router_file_edit():
-    out = _run_hook({
-        "tool_name": "Edit",
-        "tool_input": {"file_path": "src/infra_brain/api/routers/hosts.py"},
-    })
+    out = _run_hook(
+        {
+            "tool_name": "Edit",
+            "tool_input": {"file_path": "src/infra_brain/api/routers/hosts.py"},
+        }
+    )
     assert "OpenUI sync reminder" in out
 
 
 def test_fires_on_dashboard_api_edit():
-    out = _run_hook({
-        "tool_name": "Write",
-        "tool_input": {"file_path": "src/infra_brain/dashboard_api.py"},
-    })
+    out = _run_hook(
+        {
+            "tool_name": "Write",
+            "tool_input": {"file_path": "src/infra_brain/dashboard_api.py"},
+        }
+    )
     assert "OpenUI sync reminder" in out
 
 
 def test_silent_on_unrelated_file():
-    out = _run_hook({
-        "tool_name": "Edit",
-        "tool_input": {"file_path": "src/infra_brain/scheduler.py"},
-    })
+    out = _run_hook(
+        {
+            "tool_name": "Edit",
+            "tool_input": {"file_path": "src/infra_brain/scheduler.py"},
+        }
+    )
     assert out == ""
 
 
 def test_silent_on_non_edit_tool():
-    out = _run_hook({
-        "tool_name": "Read",
-        "tool_input": {"file_path": "src/infra_brain/api/routers/hosts.py"},
-    })
+    out = _run_hook(
+        {
+            "tool_name": "Read",
+            "tool_input": {"file_path": "src/infra_brain/api/routers/hosts.py"},
+        }
+    )
     assert out == ""
 
 
 def test_handles_windows_path_separators():
-    out = _run_hook({
-        "tool_name": "Edit",
-        "tool_input": {"file_path": "C:\\repo\\src\\infra_brain\\api\\routers\\hosts.py"},
-    })
+    out = _run_hook(
+        {
+            "tool_name": "Edit",
+            "tool_input": {"file_path": "C:\\repo\\src\\infra_brain\\api\\routers\\hosts.py"},
+        }
+    )
     assert "OpenUI sync reminder" in out

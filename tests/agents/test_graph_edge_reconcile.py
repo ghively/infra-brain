@@ -43,7 +43,6 @@ from infra_brain.agents.graph_maintenance import GraphMaintenanceAgent
 from infra_brain.db.models import GraphEdge, GraphNode
 
 
-
 from tests.support.pg import make_engine
 
 

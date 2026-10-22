@@ -157,7 +157,9 @@ def _probe_container_registries() -> list[ProbeResult]:
             # failure or 5xx means genuinely unreachable.
             reachable = resp.status_code < 500
             results.append(
-                ProbeResult(f"container_registry:{url}", True, reachable, f"HTTP {resp.status_code}")
+                ProbeResult(
+                    f"container_registry:{url}", True, reachable, f"HTTP {resp.status_code}"
+                )
             )
         except httpx.HTTPError as exc:
             results.append(ProbeResult(f"container_registry:{url}", True, False, str(exc)))

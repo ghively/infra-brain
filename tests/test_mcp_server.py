@@ -225,7 +225,9 @@ class TestGetRemediationSuggestionsLimit:
         with patch("infra_brain.mcp_server.get_session", _fake_get_session(remediation_db)):
             result = get_remediation_suggestions()
 
-        assert len(result["items"]) == 50, "default limit must cap the result, not return all 75 rows"
+        assert len(result["items"]) == 50, (
+            "default limit must cap the result, not return all 75 rows"
+        )
         assert result["total_count"] == 75
 
     def test_explicit_limit_is_passed_through(self, remediation_db):
@@ -305,7 +307,6 @@ class TestSearchKnowledge:
 # NOTE: the former _BearerAuth token tests (accepts/rejects/constant-time) were
 # removed in the MCP auth overhaul — _BearerAuth no longer exists. Their
 # replacement is the scoped-key middleware suite in tests/test_mcp_auth_middleware.py.
-
 
 
 # ── Batch B — vSphere tools (GitLab #46) ──────────────────────────────────────
@@ -643,6 +644,7 @@ class TestGetVsphereOverview:
         assert result["datastores"] == []
         assert result["summary"]["host_count"] == 0
         assert result["summary"]["vm_count"] == 0
+
 
 # Batch D (GitLab #48) — vuln tools: get_cve_detail, get_software_inventory,
 # get_remediation_solutions, get_asset_detail. (get_r7_sites, get_r7_tags, and
@@ -1035,11 +1037,7 @@ class TestGetWindowsLocalAdmins:
                     resource_id=rid, group_name="Administrators", member_name="Administrator"
                 )
             )
-            s.add(
-                WindowsLocalGroupMember(
-                    resource_id=rid, group_name="Users", member_name="bob"
-                )
-            )
+            s.add(WindowsLocalGroupMember(resource_id=rid, group_name="Users", member_name="bob"))
             s.commit()
 
         result = get_windows_local_admins("win-app-01")
@@ -1168,7 +1166,9 @@ class TestGetInventoryGapsLimit:
     def test_default_limit_is_applied_not_unbounded(self, engine, patched_session):
         self._seed(engine, 75)
         result = get_inventory_gaps()
-        assert len(result["items"]) == 50, "default limit must cap the result, not return all 75 rows"
+        assert len(result["items"]) == 50, (
+            "default limit must cap the result, not return all 75 rows"
+        )
         assert result["total_count"] == 75
 
     def test_explicit_limit_is_passed_through(self, engine, patched_session):
@@ -1221,7 +1221,9 @@ class TestGetDriftEventsLimit:
     def test_default_limit_is_applied_not_unbounded(self, engine, patched_session):
         self._seed(engine, 150)
         result = get_drift_events()
-        assert len(result["items"]) == 100, "default limit must cap the result, not return all 150 rows"
+        assert len(result["items"]) == 100, (
+            "default limit must cap the result, not return all 150 rows"
+        )
         assert result["total_count"] == 150
 
     def test_explicit_limit_is_passed_through(self, engine, patched_session):
@@ -1273,11 +1275,7 @@ class TestGetDriftEventsExcludesGraphMaintenance:
             s.add_all([fleet, gm])
             s.flush()
             s.add(DriftEvent(resource_id=fleet.id, drift_type="config", field="real-field"))
-            s.add(
-                DriftEvent(
-                    resource_id=gm.id, drift_type="config", field="timings.prune"
-                )
-            )
+            s.add(DriftEvent(resource_id=gm.id, drift_type="config", field="timings.prune"))
             s.commit()
 
     def test_default_excludes_graph_maintenance(self, engine, patched_session):

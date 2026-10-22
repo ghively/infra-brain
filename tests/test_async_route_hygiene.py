@@ -49,7 +49,9 @@ def test_webhook_incident_ack_offloads_db_work():
     from infra_brain import webhooks
 
     src = inspect.getsource(webhooks.webhook_incident_ack)
-    assert "asyncio.to_thread" in src, "webhook_incident_ack must offload sync DB work via to_thread"
+    assert "asyncio.to_thread" in src, (
+        "webhook_incident_ack must offload sync DB work via to_thread"
+    )
 
 
 def test_webhook_ops_alert_offloads_db_work():

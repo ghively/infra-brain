@@ -215,7 +215,9 @@ def test_annotation_mining_combined_role_box(session):
 
 
 def test_annotation_mining_no_match_emits_no_edge(session):
-    vm = _vm(session, name="prod-win-app-09", annotation="Runs the nightly billing reconciliation job.")
+    vm = _vm(
+        session, name="prod-win-app-09", annotation="Runs the nightly billing reconciliation job."
+    )
 
     written, claimed = rt.emit_roles_from_hostname(session)
     session.commit()
@@ -256,7 +258,9 @@ def test_environment_extraction_from_each_fqdn_suffix(session, guest_hostname, e
 
 
 def test_environment_unknown_suffix_emits_no_edge(session):
-    vm = _vm(session, name="prod-win-sql-08", guest_hostname="prod-win-sql-08.unknown-domain.example")
+    vm = _vm(
+        session, name="prod-win-sql-08", guest_hostname="prod-win-sql-08.unknown-domain.example"
+    )
 
     written = rt.emit_environments(session)
     session.commit()
@@ -340,18 +344,14 @@ def test_emitter_constants_fit_graph_edge_source_column(constant_name):
     assert len(value) <= max_len
 
 
-@pytest.mark.parametrize(
-    "constant_name", ["EDGE_TYPE_HAS_ROLE", "EDGE_TYPE_IN_ENVIRONMENT"]
-)
+@pytest.mark.parametrize("constant_name", ["EDGE_TYPE_HAS_ROLE", "EDGE_TYPE_IN_ENVIRONMENT"])
 def test_edge_type_constants_fit_graph_edge_type_column(constant_name):
     value = getattr(rt, constant_name)
     max_len = _col_len(GraphEdge.__table__.c.edge_type)
     assert len(value) <= max_len
 
 
-@pytest.mark.parametrize(
-    "constant_name", ["NODE_TYPE_ROLE", "NODE_TYPE_ENVIRONMENT"]
-)
+@pytest.mark.parametrize("constant_name", ["NODE_TYPE_ROLE", "NODE_TYPE_ENVIRONMENT"])
 def test_node_type_constants_fit_graph_node_type_column(constant_name):
     value = getattr(rt, constant_name)
     max_len = _col_len(GraphNode.__table__.c.node_type)

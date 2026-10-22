@@ -116,9 +116,7 @@ async def test_db_failure_while_recording_audit_row_does_not_break_the_tool_call
     """The audit write is best-effort — a DB blip must not turn a successful
     tool call into a failed one from the caller's perspective."""
     mcp = _make_test_server()
-    with patch(
-        "infra_brain.mcp_audit_middleware.get_session", side_effect=RuntimeError("db down")
-    ):
+    with patch("infra_brain.mcp_audit_middleware.get_session", side_effect=RuntimeError("db down")):
         async with Client(mcp) as client:
             result = await client.call_tool("ok_tool", {"x": 5})
     assert result.data == {"doubled": 10}

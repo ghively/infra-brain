@@ -111,16 +111,30 @@ def test_detect_all_writes_drift_events():
 
     with Session(eng) as s:
         r = Resource(id=uuid.uuid4(), domain="cloud", type="instance", name="i-1", source="t")
-        run1 = CollectionRun(id=uuid.uuid4(), domain="cloud", trigger_type="scheduled",
-                             status="completed")
-        run2 = CollectionRun(id=uuid.uuid4(), domain="cloud", trigger_type="scheduled",
-                             status="completed")
+        run1 = CollectionRun(
+            id=uuid.uuid4(), domain="cloud", trigger_type="scheduled", status="completed"
+        )
+        run2 = CollectionRun(
+            id=uuid.uuid4(), domain="cloud", trigger_type="scheduled", status="completed"
+        )
         s.add_all([r, run1, run2])
         s.flush()
-        s.add(Snapshot(id=uuid.uuid4(), resource_id=r.id, run_id=run1.id,
-                       snapshot={"instance_type": "t3.small"}))
-        s.add(Snapshot(id=uuid.uuid4(), resource_id=r.id, run_id=run2.id,
-                       snapshot={"instance_type": "t3.medium"}))
+        s.add(
+            Snapshot(
+                id=uuid.uuid4(),
+                resource_id=r.id,
+                run_id=run1.id,
+                snapshot={"instance_type": "t3.small"},
+            )
+        )
+        s.add(
+            Snapshot(
+                id=uuid.uuid4(),
+                resource_id=r.id,
+                run_id=run2.id,
+                snapshot={"instance_type": "t3.medium"},
+            )
+        )
         s.commit()
 
     from contextlib import contextmanager
@@ -395,9 +409,7 @@ def test_detect_state_drift_last_run_lookup_is_bounded_not_full_history_scan():
         if sql.strip().lower().startswith("select") and "collection_runs" in sql.lower()
     ]
     assert cr_selects, "expected detect_state_drift to query collection_runs at all"
-    assert any(
-        "over" in sql.lower() and "partition" in sql.lower() for sql in cr_selects
-    ), (
+    assert any("over" in sql.lower() and "partition" in sql.lower() for sql in cr_selects), (
         "detect_state_drift must push the per-domain latest-run selection into "
         "SQL (a window function) instead of pulling every completed "
         "CollectionRun ever into Python"
@@ -1133,9 +1145,7 @@ def test_drift_foreign_writer_event_not_auto_resolved():
 
     with Session(eng) as s:
         event = (
-            s.query(DriftEvent)
-            .filter_by(resource_id=resource_id, field="listening_port.22")
-            .one()
+            s.query(DriftEvent).filter_by(resource_id=resource_id, field="listening_port.22").one()
         )
         # Must stay open — this is the whole point of the fix.
         assert event.status == "open"

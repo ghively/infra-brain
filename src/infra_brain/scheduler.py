@@ -29,11 +29,8 @@ _DEFAULT_MISFIRE_GRACE_SECONDS = 300
 
 
 def _misfire_grace_time(day_of_week: str) -> int:
-    return (
-        _WEEKLY_MISFIRE_GRACE_SECONDS
-        if day_of_week != "*"
-        else _DEFAULT_MISFIRE_GRACE_SECONDS
-    )
+    return _WEEKLY_MISFIRE_GRACE_SECONDS if day_of_week != "*" else _DEFAULT_MISFIRE_GRACE_SECONDS
+
 
 # TRK-231 / #109: (domain, scope) -> UTC date it was first skipped this day
 # because Redis was unreachable to acquire the dedup lock (LockBackendUnavailable
@@ -259,16 +256,14 @@ def _redis_outage_catchup_job() -> None:
     for (domain, scope), skipped_on in pending:
         if skipped_on != today:
             log.info(
-                "[redis-outage-catchup] dropping stale skip for %s/%s "
-                "(skipped %s, not retried)",
+                "[redis-outage-catchup] dropping stale skip for %s/%s (skipped %s, not retried)",
                 domain,
                 scope,
                 skipped_on,
             )
             continue
         log.info(
-            "[redis-outage-catchup] re-attempting %s/%s after earlier "
-            "Redis-lock-unavailable skip",
+            "[redis-outage-catchup] re-attempting %s/%s after earlier Redis-lock-unavailable skip",
             domain,
             scope,
         )

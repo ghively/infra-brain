@@ -183,9 +183,7 @@ class TestGetHostVulns:
                 last_updated=_now(),
             )
         )
-        db.add(
-            R7VulnCve(r7_vuln_id="vendor-product-cve-2024-0001", cve_id="CVE-2024-0001")
-        )
+        db.add(R7VulnCve(r7_vuln_id="vendor-product-cve-2024-0001", cve_id="CVE-2024-0001"))
         db.add(
             R7Vulnerability(
                 r7_vuln_id="vendor-product-cve-2024-0001",
@@ -196,14 +194,8 @@ class TestGetHostVulns:
                 pci_fail=True,
             )
         )
-        db.add(
-            R7VulnSolution(
-                r7_vuln_id="vendor-product-cve-2024-0001", r7_solution_id="fix-001"
-            )
-        )
-        db.add(
-            R7Solution(r7_solution_id="fix-001", summary="Apply vendor patch v2.3")
-        )
+        db.add(R7VulnSolution(r7_vuln_id="vendor-product-cve-2024-0001", r7_solution_id="fix-001"))
+        db.add(R7Solution(r7_solution_id="fix-001", summary="Apply vendor patch v2.3"))
         db.commit()
 
         result = get_host_vulns("app-01")
@@ -376,7 +368,9 @@ class TestGetHostVulns:
         assert result["total"] == 0
         assert result["header"]["vuln_queue_coverage_gap"] is True
         assert "coverage_note" in result["header"]
-        assert "750" in result["header"]["coverage_note"] or "cap" in result["header"]["coverage_note"]
+        assert (
+            "750" in result["header"]["coverage_note"] or "cap" in result["header"]["coverage_note"]
+        )
 
     def test_coverage_gap_not_flagged_when_counts_agree(self, session_patch, db):
         """The visibility flag must not fire when vuln_queue coverage is
@@ -709,9 +703,7 @@ class TestGetHostContext:
         db.flush()
 
         db.add(HostIdentity(short_hostname="app-01", ip_addresses=[], r7_resource_id=r7_res.id))
-        db.add(
-            DriftEvent(resource_id=r7_res.id, drift_type="config", field="real", status="open")
-        )
+        db.add(DriftEvent(resource_id=r7_res.id, drift_type="config", field="real", status="open"))
         db.commit()
 
         result = get_host_context("app-01")

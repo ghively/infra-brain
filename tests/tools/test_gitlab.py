@@ -144,7 +144,10 @@ def test_gitlab_http_error_raises_toolexception():
 
 
 def test_gitlab_runners_tool_returns_list():
-    runners = [{"id": 1, "description": "shared-runner-1"}, {"id": 2, "description": "shared-runner-2"}]
+    runners = [
+        {"id": 1, "description": "shared-runner-1"},
+        {"id": 2, "description": "shared-runner-2"},
+    ]
     with patch("infra_brain.tools.gitlab.gitlab_get", return_value=runners):
         result = gitlab_runners_tool.invoke({})
     assert len(result) == 2

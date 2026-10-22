@@ -105,8 +105,12 @@ async def runner_record_client_state(collection: str, entry_id: str, payload: di
 
 @tool
 async def runner_propose_instinct(
-    zone: str, domain: str, pattern: str, confidence: float,
-    evidence: str = "", citation: str = "",
+    zone: str,
+    domain: str,
+    pattern: str,
+    confidence: float,
+    evidence: str = "",
+    citation: str = "",
 ) -> dict:
     """Draft a proposed instinct (status=pending) for later human approval —
     does not touch the live instincts table.

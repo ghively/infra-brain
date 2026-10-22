@@ -109,9 +109,7 @@ def check_schedule_collisions() -> dict:
 
 def check_callbacks_wiring() -> dict:
     name = "callbacks_wiring"
-    if _ETL_BASE_PY.exists() and "build_callbacks" not in _ETL_BASE_PY.read_text(
-        encoding="utf-8"
-    ):
+    if _ETL_BASE_PY.exists() and "build_callbacks" not in _ETL_BASE_PY.read_text(encoding="utf-8"):
         return _result(
             name,
             "error",

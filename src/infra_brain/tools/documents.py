@@ -139,9 +139,7 @@ def ingest_document(
     _require_nonblank("ingested_by", ingested_by)
 
     with get_session() as session:
-        existing = (
-            session.query(Document).filter(Document.content_hash == content_hash).first()
-        )
+        existing = session.query(Document).filter(Document.content_hash == content_hash).first()
         if existing is not None:
             return _serialize(existing, already_existed=True)
 

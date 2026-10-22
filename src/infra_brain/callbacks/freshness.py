@@ -341,9 +341,7 @@ def check_collection_health() -> list[str]:
             _set_streak(session, domain, streak)
 
             if unhealthy and streak >= escalation_streak:
-                domain_alerts = [
-                    f"ESCALATED ({streak}x in a row) — {msg}" for msg in domain_alerts
-                ]
+                domain_alerts = [f"ESCALATED ({streak}x in a row) — {msg}" for msg in domain_alerts]
 
             alerts.extend(domain_alerts)
         session.commit()

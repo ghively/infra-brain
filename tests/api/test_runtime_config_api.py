@@ -129,9 +129,7 @@ def admin_gated_app(monkeypatch):
 
 @pytest.fixture
 def admin_client(admin_gated_app):
-    admin_gated_app.post(
-        "/api/dashboard/login", json={"username": "admin-user", "password": "pw"}
-    )
+    admin_gated_app.post("/api/dashboard/login", json={"username": "admin-user", "password": "pw"})
     return admin_gated_app
 
 
@@ -139,9 +137,7 @@ def admin_client(admin_gated_app):
 def session_client(admin_gated_app):
     """Logged-in but non-admin (viewer role) — session-gated reads succeed,
     admin-gated writes must 403."""
-    admin_gated_app.post(
-        "/api/dashboard/login", json={"username": "viewer-user", "password": "pw"}
-    )
+    admin_gated_app.post("/api/dashboard/login", json={"username": "viewer-user", "password": "pw"})
     return admin_gated_app
 
 
@@ -152,9 +148,7 @@ def test_put_then_get_runtime_config(admin_client):
     )
     assert resp.status_code == 200
     resp = admin_client.get("/api/dashboard/runtime-config")
-    row = next(
-        r for r in resp.json()["items"] if r["key"] == "netdiscovery_tier2_chunk_size"
-    )
+    row = next(r for r in resp.json()["items"] if r["key"] == "netdiscovery_tier2_chunk_size")
     assert row["value"] == "750"
     assert row["is_secret"] is False
 
@@ -164,14 +158,10 @@ def test_delete_reverts_to_default(admin_client):
         "/api/dashboard/runtime-config/netdiscovery_tier2_chunk_size",
         json={"value": "750", "value_type": "int"},
     )
-    resp = admin_client.delete(
-        "/api/dashboard/runtime-config/netdiscovery_tier2_chunk_size"
-    )
+    resp = admin_client.delete("/api/dashboard/runtime-config/netdiscovery_tier2_chunk_size")
     assert resp.status_code == 204
     resp = admin_client.get("/api/dashboard/runtime-config")
-    assert not any(
-        r["key"] == "netdiscovery_tier2_chunk_size" for r in resp.json()["items"]
-    )
+    assert not any(r["key"] == "netdiscovery_tier2_chunk_size" for r in resp.json()["items"])
 
 
 def test_delete_unknown_key_is_404(admin_client):

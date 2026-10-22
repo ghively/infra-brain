@@ -174,7 +174,9 @@ def haproxy_stats_tool(stats_url: str) -> list:
     ``f5_ltm_pools_tool`` docstring for why they are never a tool argument.
     """
     s = get_settings()
-    auth = (s.haproxy_stats_username, s.haproxy_stats_password) if s.haproxy_stats_username else None
+    auth = (
+        (s.haproxy_stats_username, s.haproxy_stats_password) if s.haproxy_stats_username else None
+    )
     resp = readonly_get(f"{stats_url.rstrip('?')}?;csv", auth=auth)
     resp.raise_for_status()
     text = resp.text.lstrip("# ")

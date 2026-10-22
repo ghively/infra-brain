@@ -360,9 +360,7 @@ def test_ambiguous_batch_entry_is_denied(wired):
     scope-restricted key, never silently skip the scope check."""
     client, raw, _ = wired
     # non-dict batch item
-    r1 = client.post(
-        "/mcp", content=json.dumps([123]), headers={"authorization": f"Bearer {raw}"}
-    )
+    r1 = client.post("/mcp", content=json.dumps([123]), headers={"authorization": f"Bearer {raw}"})
     assert r1.status_code == 403
     # tools/call entry whose name is not a string
     r2 = client.post(

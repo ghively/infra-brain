@@ -73,10 +73,13 @@ def test_eol_cycles_tool_calls_raise_for_status():
 def test_eol_cycles_tool_propagates_http_errors():
     """A 404 (unknown product) must raise, not silently return []  — the
     caller (EOLAgent) needs to distinguish "no data" from "product typo"."""
-    with patch(
-        "infra_brain.tools.eol.ReadOnlyClient",
-        return_value=_fake_client([], status_ok=False),
-    ), pytest.raises(httpx.HTTPStatusError):
+    with (
+        patch(
+            "infra_brain.tools.eol.ReadOnlyClient",
+            return_value=_fake_client([], status_ok=False),
+        ),
+        pytest.raises(httpx.HTTPStatusError),
+    ):
         eol_cycles_tool.invoke({"product": "not-a-real-product"})
 
 

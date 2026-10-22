@@ -67,7 +67,9 @@ def _mask_otel_spans(*, params):
             elif isinstance(value, (list, tuple)) and any(isinstance(v, str) for v in value):
                 # OTel attributes may be Sequence[str] — scrub element-wise so a
                 # PAN inside a future list-valued attribute cannot leak.
-                redacted_seq = [redact_pans_preserving_uuids(v) if isinstance(v, str) else v for v in value]
+                redacted_seq = [
+                    redact_pans_preserving_uuids(v) if isinstance(v, str) else v for v in value
+                ]
                 if list(redacted_seq) != list(value):
                     changed[key] = (
                         type(value)(redacted_seq) if isinstance(value, tuple) else redacted_seq

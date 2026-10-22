@@ -146,7 +146,9 @@ class TestCollectSuccess:
         sparse_response = {
             "status": "success",
             "data": {
-                "activeTargets": [{"labels": {"job": "node_exporter", "instance": "media-host:9100"}}],
+                "activeTargets": [
+                    {"labels": {"job": "node_exporter", "instance": "media-host:9100"}}
+                ],
                 "droppedTargets": [],
             },
         }

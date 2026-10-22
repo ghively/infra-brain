@@ -364,9 +364,7 @@ def test_gate_allows_all_zones_when_unset(make_agent, session_patcher):
     """Empty dns_allowed_zones (default) must allow every configured zone —
     backward compatible with pre-gate behavior."""
     with session_patcher(MODULE) as engine:
-        agent = make_agent(
-            DnsAgent, settings=_settings(zones="example.com", allowed_zones="")
-        )
+        agent = make_agent(DnsAgent, settings=_settings(zones="example.com", allowed_zones=""))
         with (
             patch(f"{MODULE}._DNSPYTHON_AVAILABLE", True),
             patch(f"{MODULE}.query_soa", return_value=dict(_SOA)) as mock_soa,

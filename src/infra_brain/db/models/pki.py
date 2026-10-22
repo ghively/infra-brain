@@ -49,13 +49,9 @@ class CertificateAuthority(Base):
     # Last read-only health check result against crl_url/ocsp_url, when set.
     # "reachable" | "unreachable" | None (never checked, e.g. no url set).
     crl_status: Mapped[str | None] = mapped_column(String(16), nullable=True)
-    crl_checked_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    crl_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     ocsp_status: Mapped[str | None] = mapped_column(String(16), nullable=True)
-    ocsp_checked_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    ocsp_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_expired: Mapped[bool] = mapped_column(Boolean, default=False)
     collected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
     __table_args__ = (UniqueConstraint("name", "ca_type", name="uq_certificate_authority_natkey"),)

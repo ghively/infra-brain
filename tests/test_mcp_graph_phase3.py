@@ -196,9 +196,7 @@ def test_get_root_cause_returns_neighbor_change(patched_session):
         vm_res = _resource(s, "web01")
         esxi_res = _resource(s, "esxi01")
         vm = _node(s, GraphNodeType.VSPHERE_VM, "vc1:vm-1", "web01", resource_id=vm_res.id)
-        esxi = _node(
-            s, GraphNodeType.VSPHERE_HOST, "vc1:host-1", "esxi01", resource_id=esxi_res.id
-        )
+        esxi = _node(s, GraphNodeType.VSPHERE_HOST, "vc1:host-1", "esxi01", resource_id=esxi_res.id)
         graph_phase2.upsert_edge(
             s,
             source_id=vm.id,

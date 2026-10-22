@@ -25,7 +25,9 @@ def test_record_mcp_tool_call_observes_duration_histogram():
 def test_mcp_auth_denials_total_counts_regardless_of_audit_row_suppression():
     """GitLab #171 follow-up: denial VOLUME stays visible even in the windows
     where the rate limiter suppresses most of those denials' audit rows."""
-    before_audited = MCP_AUTH_DENIALS_TOTAL.labels(reason="key_invalid_or_expired", audited="true")._value.get()
+    before_audited = MCP_AUTH_DENIALS_TOTAL.labels(
+        reason="key_invalid_or_expired", audited="true"
+    )._value.get()
     before_suppressed = MCP_AUTH_DENIALS_TOTAL.labels(
         reason="key_invalid_or_expired", audited="false"
     )._value.get()

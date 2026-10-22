@@ -58,9 +58,7 @@ class _DetailPhaseDriftWriter(ETLConnector):
         self._gs = get_session
 
     def collect(self, scope: str = "all") -> CollectOutcome:
-        return CollectOutcome(
-            items=[{"name": "host-1", "type": "test_host", "source": "test"}]
-        )
+        return CollectOutcome(items=[{"name": "host-1", "type": "test_host", "source": "test"}])
 
     def _detail_writers(self, scope, result):
         # run() invokes each writer with no arguments, so close over `result`.
@@ -68,9 +66,7 @@ class _DetailPhaseDriftWriter(ETLConnector):
 
     def _write_drift_in_detail_phase(self, result) -> int:
         with self._gs() as session:
-            resource = (
-                session.query(Resource).filter(Resource.domain == self.domain).first()
-            )
+            resource = session.query(Resource).filter(Resource.domain == self.domain).first()
             for i in range(3):
                 session.add(
                     DriftEvent(
@@ -102,9 +98,7 @@ def test_detail_phase_drift_is_persisted_not_just_returned():
     with get_session() as session:
         row = session.get(CollectionRun, result.run_id)
         actual = (
-            session.query(DriftEvent)
-            .filter(DriftEvent.collection_run_id == result.run_id)
-            .count()
+            session.query(DriftEvent).filter(DriftEvent.collection_run_id == result.run_id).count()
         )
         assert actual == 3, "the detail writer should have written 3 DriftEvent rows"
         assert row.drift_count == actual, (

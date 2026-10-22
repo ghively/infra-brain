@@ -366,9 +366,7 @@ def test_collect_vm_perf_history_scales_percent_counters_to_0_100():
 
         with (
             patch("infra_brain.tools.vsphere.vim", MagicMock()),
-            patch(
-                "infra_brain.tools.vsphere._collect_properties", return_value=[vm_obj]
-            ),
+            patch("infra_brain.tools.vsphere._collect_properties", return_value=[vm_obj]),
         ):
             result = vsphere_mod.collect_vm_perf_history(content, "vc1.example.com")
 

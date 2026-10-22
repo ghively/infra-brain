@@ -348,11 +348,7 @@ async def put_resource_ownership(
                 },
             )
             s.commit()
-            row = (
-                s.query(ResourceOwnership)
-                .filter(ResourceOwnership.resource_id == rid)
-                .one()
-            )
+            row = s.query(ResourceOwnership).filter(ResourceOwnership.resource_id == rid).one()
             return ResourceOwnershipOut(
                 resource_id=str(rid),
                 owner_team=row.owner_team,
@@ -595,9 +591,7 @@ def get_host_posture(resource_id: str):
         )
         rules = s.query(HostFirewallRule).filter(HostFirewallRule.resource_id == rid).all()
         shares = s.query(HostShare).filter(HostShare.resource_id == rid).all()
-        local_users = (
-            s.query(WindowsLocalUser).filter(WindowsLocalUser.resource_id == rid).all()
-        )
+        local_users = s.query(WindowsLocalUser).filter(WindowsLocalUser.resource_id == rid).all()
         group_members = (
             s.query(WindowsLocalGroupMember)
             .filter(WindowsLocalGroupMember.resource_id == rid)

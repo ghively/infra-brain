@@ -60,12 +60,14 @@ def test_run_agent_task_records_completed_run(monkeypatch):
     fake_llm = _FakeToolLLM(messages=iter([AIMessage(content="all clear")]))
 
     monkeypatch.setattr(
-        runner_agent, "start_agent_task_run",
+        runner_agent,
+        "start_agent_task_run",
         lambda task_name, prompt: {"id": "run-1", "task_name": task_name, "prompt": prompt},
     )
     completed = {}
     monkeypatch.setattr(
-        runner_agent, "complete_agent_task_run",
+        runner_agent,
+        "complete_agent_task_run",
         lambda run_id, **kwargs: completed.update(id=run_id, **kwargs) or {},
     )
 
@@ -85,12 +87,14 @@ def test_run_agent_task_records_completed_run(monkeypatch):
 
 def test_run_agent_task_records_failed_run_on_exception(monkeypatch):
     monkeypatch.setattr(
-        runner_agent, "start_agent_task_run",
+        runner_agent,
+        "start_agent_task_run",
         lambda task_name, prompt: {"id": "run-2", "task_name": task_name, "prompt": prompt},
     )
     completed = {}
     monkeypatch.setattr(
-        runner_agent, "complete_agent_task_run",
+        runner_agent,
+        "complete_agent_task_run",
         lambda run_id, **kwargs: completed.update(id=run_id, **kwargs) or {},
     )
 

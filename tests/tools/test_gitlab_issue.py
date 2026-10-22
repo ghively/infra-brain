@@ -167,9 +167,7 @@ def test_comment_on_gitlab_issue_returns_created_note():
     ):
         mock_gate_ctx.return_value.__enter__ = lambda s: mock_session
         mock_gate_ctx.return_value.__exit__ = MagicMock(return_value=False)
-        mock_post.return_value = _mock_resp(
-            {"id": 101, "body": "Investigating now."}
-        )
+        mock_post.return_value = _mock_resp({"id": 101, "body": "Investigating now."})
 
         result = comment_on_gitlab_issue(project_id=5, issue_iid=42, body="Investigating now.")
 

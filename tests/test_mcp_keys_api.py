@@ -1,4 +1,5 @@
 """MCP key-management dashboard routes (session/admin gated; dev-mode open)."""
+
 from contextlib import contextmanager
 
 import bcrypt
@@ -170,7 +171,9 @@ def test_create_without_expires_days_never_expires(client):
     assert r.status_code == 200
     assert r.json()["expires_at"] is None
 
-    item = next(k for k in client.get("/api/dashboard/mcp-keys").json()["items"] if k["name"] == "no-expiry")
+    item = next(
+        k for k in client.get("/api/dashboard/mcp-keys").json()["items"] if k["name"] == "no-expiry"
+    )
     assert item["expires_at"] is None
     assert item["expired"] is False
     assert item["revoked"] is False
@@ -194,7 +197,9 @@ def test_create_with_expires_days_returns_computed_expires_at(client):
     delta = parsed - datetime.now(UTC)
     assert timedelta(days=29) < delta < timedelta(days=31)
 
-    item = next(k for k in client.get("/api/dashboard/mcp-keys").json()["items"] if k["name"] == "expiring")
+    item = next(
+        k for k in client.get("/api/dashboard/mcp-keys").json()["items"] if k["name"] == "expiring"
+    )
     assert item["expires_at"] is not None
     assert item["expired"] is False  # not yet
 
@@ -248,7 +253,9 @@ def test_list_reports_expired_distinctly_from_revoked(client):
         row.expires_at = datetime.now(UTC) - timedelta(hours=1)
         s.commit()
 
-    item = next(k for k in client.get("/api/dashboard/mcp-keys").json()["items"] if k["id"] == key_id)
+    item = next(
+        k for k in client.get("/api/dashboard/mcp-keys").json()["items"] if k["id"] == key_id
+    )
     assert item["expired"] is True
     assert item["revoked"] is False  # nobody revoked it; it simply ran out
 

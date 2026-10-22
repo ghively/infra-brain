@@ -75,7 +75,6 @@ def _matches(subscription: WebhookSubscription, category: str, domain: str | Non
     return bool(domain) and domain_filter.lower() == domain.lower()
 
 
-
 def _is_ssrf_safe_target(url: str) -> bool:
     """Reject targets that resolve to a private/loopback/link-local/reserved
     IP -- the subscription's target_url is admin-supplied via the dashboard
@@ -363,7 +362,11 @@ def retry_pending_deliveries(now: datetime | None = None, batch_size: int = 50) 
             messages = _parse_payload_summary(row.payload_summary)
             try:
                 delivered, error = _deliver(
-                    sub, row.category, messages, row.dedup_key, "webhook-retry-worker",
+                    sub,
+                    row.category,
+                    messages,
+                    row.dedup_key,
+                    "webhook-retry-worker",
                     timeout_seconds,
                 )
             except PermissionError as exc:

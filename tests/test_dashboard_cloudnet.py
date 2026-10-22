@@ -78,11 +78,45 @@ def test_overview_returns_seeded_rows_when_domains_enabled(client, engine):
     same endpoint must surface real typed data — proven here with seeded
     rows standing in for a live collector."""
     with Session(engine) as s:
-        s.add(CloudResource(provider="aws", cloud_type="ec2_instance", cloud_id="i-0123", name="web-01", region="us-east-1", state="running"))
-        s.add(K8sNode(cluster="prod", name="node-1", status="Ready", roles=["worker"], kubelet_version="v1.29.0", arch="amd64"))
-        s.add(K8sPod(cluster="prod", namespace="default", name="api-7f9c", phase="Running", node_name="node-1"))
-        s.add(K8sDeployment(cluster="prod", namespace="default", name="api", replicas=3, ready=3, available=3))
-        s.add(NetDevice(ip="10.0.0.1", name="core-switch-01", sysname="sw01.internal", location="rack-3"))
+        s.add(
+            CloudResource(
+                provider="aws",
+                cloud_type="ec2_instance",
+                cloud_id="i-0123",
+                name="web-01",
+                region="us-east-1",
+                state="running",
+            )
+        )
+        s.add(
+            K8sNode(
+                cluster="prod",
+                name="node-1",
+                status="Ready",
+                roles=["worker"],
+                kubelet_version="v1.29.0",
+                arch="amd64",
+            )
+        )
+        s.add(
+            K8sPod(
+                cluster="prod",
+                namespace="default",
+                name="api-7f9c",
+                phase="Running",
+                node_name="node-1",
+            )
+        )
+        s.add(
+            K8sDeployment(
+                cluster="prod", namespace="default", name="api", replicas=3, ready=3, available=3
+            )
+        )
+        s.add(
+            NetDevice(
+                ip="10.0.0.1", name="core-switch-01", sysname="sw01.internal", location="rack-3"
+            )
+        )
         s.commit()
 
     resp = client.get("/api/cloudnet/overview")

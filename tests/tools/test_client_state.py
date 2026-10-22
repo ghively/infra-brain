@@ -276,7 +276,10 @@ def test_get_observations_respects_limit(engine):
 
 def test_get_observations_includes_event_data(engine):
     record_observation(
-        client_id="m", agent="a", tool="bash", domain="general",
+        client_id="m",
+        agent="a",
+        tool="bash",
+        domain="general",
         event_data={"fingerprint": "abc"},
     )
     results = get_observations(agent="a")

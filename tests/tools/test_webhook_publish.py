@@ -125,9 +125,7 @@ class TestPublishEvent:
 
     def test_noop_when_no_matching_subscriptions(self, engine, session_ctx):
         _add_subscription(engine, event_pattern="compliance.*")
-        with patch(
-            "infra_brain.config.get_settings", return_value=_settings()
-        ):
+        with patch("infra_brain.config.get_settings", return_value=_settings()):
             result = webhook_publish.publish_event("drift.critical", ["msg"])
         assert result == {"matched": 0, "delivered": 0, "failed": 0}
 
@@ -136,9 +134,7 @@ class TestPublishEvent:
         mock_resp = MagicMock()
         mock_resp.raise_for_status = MagicMock()
         with (
-            patch(
-                "infra_brain.config.get_settings", return_value=_settings()
-            ),
+            patch("infra_brain.config.get_settings", return_value=_settings()),
             patch(
                 "infra_brain.tools.webhook_publish.httpx.post", return_value=mock_resp
             ) as mock_post,
@@ -159,9 +155,7 @@ class TestPublishEvent:
     def test_ignores_inactive_subscription(self, engine, session_ctx):
         _add_subscription(engine, active=False)
         with (
-            patch(
-                "infra_brain.config.get_settings", return_value=_settings()
-            ),
+            patch("infra_brain.config.get_settings", return_value=_settings()),
             patch("infra_brain.tools.webhook_publish.httpx.post") as mock_post,
         ):
             result = webhook_publish.publish_event("drift.critical", ["msg"])
@@ -172,9 +166,7 @@ class TestPublishEvent:
     def test_failure_creates_retrying_delivery_row(self, engine, session_ctx):
         sub_id = _add_subscription(engine)
         with (
-            patch(
-                "infra_brain.config.get_settings", return_value=_settings()
-            ),
+            patch("infra_brain.config.get_settings", return_value=_settings()),
             patch(
                 "infra_brain.tools.webhook_publish.httpx.post",
                 side_effect=RuntimeError("connection refused"),
@@ -204,12 +196,8 @@ class TestPublishEvent:
             return mock_resp
 
         with (
-            patch(
-                "infra_brain.config.get_settings", return_value=_settings()
-            ),
-            patch(
-                "infra_brain.tools.webhook_publish.httpx.post", side_effect=_side_effect
-            ),
+            patch("infra_brain.config.get_settings", return_value=_settings()),
+            patch("infra_brain.tools.webhook_publish.httpx.post", side_effect=_side_effect),
             _mock_gate(),
         ):
             result = webhook_publish.publish_event("drift.critical", ["msg"])
@@ -224,9 +212,7 @@ class TestPublishEvent:
         retry_pending_deliveries() already handles this same exception."""
         sub_id = _add_subscription(engine)
         with (
-            patch(
-                "infra_brain.config.get_settings", return_value=_settings()
-            ),
+            patch("infra_brain.config.get_settings", return_value=_settings()),
             patch(
                 "infra_brain.tools.webhook_publish.gate_external_write",
                 side_effect=PermissionError("PAN detected"),
@@ -241,9 +227,7 @@ class TestPublishEvent:
             assert row.next_attempt_at is None
             assert "PAN detected" in row.last_error
 
-    def test_write_gate_deny_on_one_subscription_does_not_block_another(
-        self, engine, session_ctx
-    ):
+    def test_write_gate_deny_on_one_subscription_does_not_block_another(self, engine, session_ctx):
         """Reproduces the fan-out-abort bug directly: subscription 'a' trips
         the DLP gate, subscription 'b' does not -- 'b' must still receive
         the event instead of the PermissionError unwinding out of
@@ -262,9 +246,7 @@ class TestPublishEvent:
             return None
 
         with (
-            patch(
-                "infra_brain.config.get_settings", return_value=_settings()
-            ),
+            patch("infra_brain.config.get_settings", return_value=_settings()),
             patch(
                 "infra_brain.tools.webhook_publish.httpx.post", return_value=mock_resp
             ) as mock_post,
@@ -309,9 +291,7 @@ class TestRetryPendingDeliveries:
         self._add_delivery(
             engine, sub_id, next_attempt_at=datetime.now(timezone.utc) + timedelta(hours=1)
         )
-        with patch(
-            "infra_brain.config.get_settings", return_value=_settings()
-        ):
+        with patch("infra_brain.config.get_settings", return_value=_settings()):
             result = webhook_publish.retry_pending_deliveries()
         assert result == {"attempted": 0, "delivered": 0, "exhausted": 0, "rescheduled": 0}
 
@@ -322,9 +302,7 @@ class TestRetryPendingDeliveries:
         mock_resp = MagicMock()
         mock_resp.raise_for_status = MagicMock()
         with (
-            patch(
-                "infra_brain.config.get_settings", return_value=_settings()
-            ),
+            patch("infra_brain.config.get_settings", return_value=_settings()),
             patch("infra_brain.tools.webhook_publish.httpx.post", return_value=mock_resp),
             _mock_gate(),
         ):
@@ -342,9 +320,7 @@ class TestRetryPendingDeliveries:
         delivery_id = self._add_delivery(engine, sub_id, attempt_count=1, max_attempts=5)
 
         with (
-            patch(
-                "infra_brain.config.get_settings", return_value=_settings()
-            ),
+            patch("infra_brain.config.get_settings", return_value=_settings()),
             patch(
                 "infra_brain.tools.webhook_publish.httpx.post",
                 side_effect=RuntimeError("still down"),
@@ -371,9 +347,7 @@ class TestRetryPendingDeliveries:
         delivery_id = self._add_delivery(engine, sub_id, attempt_count=4, max_attempts=5)
 
         with (
-            patch(
-                "infra_brain.config.get_settings", return_value=_settings()
-            ),
+            patch("infra_brain.config.get_settings", return_value=_settings()),
             patch(
                 "infra_brain.tools.webhook_publish.httpx.post",
                 side_effect=RuntimeError("still down"),
@@ -392,9 +366,7 @@ class TestRetryPendingDeliveries:
         delivery_id = self._add_delivery(engine, sub_id)
 
         with (
-            patch(
-                "infra_brain.config.get_settings", return_value=_settings()
-            ),
+            patch("infra_brain.config.get_settings", return_value=_settings()),
             patch("infra_brain.tools.webhook_publish.httpx.post") as mock_post,
         ):
             result = webhook_publish.retry_pending_deliveries()
@@ -410,9 +382,7 @@ class TestRetryPendingDeliveries:
         delivery_id = self._add_delivery(engine, sub_id, attempt_count=1, max_attempts=5)
 
         with (
-            patch(
-                "infra_brain.config.get_settings", return_value=_settings()
-            ),
+            patch("infra_brain.config.get_settings", return_value=_settings()),
             patch(
                 "infra_brain.tools.webhook_publish.gate_external_write",
                 side_effect=PermissionError("PAN detected"),

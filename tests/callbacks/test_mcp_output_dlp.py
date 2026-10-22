@@ -86,7 +86,9 @@ async def test_scan_failure_fails_open_not_closed(monkeypatch):
     """A bug in the scrub itself must never break a legitimate MCP response."""
     import infra_brain.mcp_audit_middleware as mam
 
-    monkeypatch.setattr(mam, "redact_pans_preserving_uuids", lambda _: (_ for _ in ()).throw(RuntimeError("boom")))
+    monkeypatch.setattr(
+        mam, "redact_pans_preserving_uuids", lambda _: (_ for _ in ()).throw(RuntimeError("boom"))
+    )
 
     mcp = _make_test_server()
     mock_session = MagicMock()

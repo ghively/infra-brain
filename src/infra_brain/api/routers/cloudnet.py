@@ -69,7 +69,12 @@ def cloudnet_overview() -> CloudNetOverviewOut:
     with get_session() as s:
         cloud_rows = s.query(CloudResource).order_by(CloudResource.name).limit(_ROW_LIMIT).all()
         node_rows = s.query(K8sNode).order_by(K8sNode.cluster, K8sNode.name).limit(_ROW_LIMIT).all()
-        pod_rows = s.query(K8sPod).order_by(K8sPod.cluster, K8sPod.namespace, K8sPod.name).limit(_ROW_LIMIT).all()
+        pod_rows = (
+            s.query(K8sPod)
+            .order_by(K8sPod.cluster, K8sPod.namespace, K8sPod.name)
+            .limit(_ROW_LIMIT)
+            .all()
+        )
         deploy_rows = (
             s.query(K8sDeployment)
             .order_by(K8sDeployment.cluster, K8sDeployment.namespace, K8sDeployment.name)

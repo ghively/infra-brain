@@ -232,7 +232,11 @@ def test_probe_routes_through_readonly_get_not_bare_httpx(agent, tmp_path):
         outcome = agent.collect(manifest_path=manifest_path)
 
     mock_readonly_get.assert_called_once()
-    called_url = mock_readonly_get.call_args.args[0] if mock_readonly_get.call_args.args else mock_readonly_get.call_args.kwargs["url"]
+    called_url = (
+        mock_readonly_get.call_args.args[0]
+        if mock_readonly_get.call_args.args
+        else mock_readonly_get.call_args.kwargs["url"]
+    )
     assert called_url == "http://203.0.113.15:3002"
     assert outcome.items[0]["data"]["status"] == "up"
     assert outcome.items[0]["data"]["http_status"] == 200

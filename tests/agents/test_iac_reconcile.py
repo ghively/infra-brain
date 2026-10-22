@@ -105,7 +105,9 @@ def test_reconcile_is_idempotent(make_agent, sqlite_engine, session_patcher):
         from sqlalchemy.orm import Session
 
         with Session(engine) as s:
-            _resource(s, name="path/a.yaml", type_="ansible_playbook", last_seen=now - timedelta(days=1))
+            _resource(
+                s, name="path/a.yaml", type_="ansible_playbook", last_seen=now - timedelta(days=1)
+            )
             _resource(s, name="path/a.yaml", type_="k8s_manifest", last_seen=now)
             s.commit()
             first_pass = agent._reconcile_stale_typed_duplicates(s)

@@ -161,9 +161,7 @@ class FleetHealthReporter(ETLConnector):
                     return "degrading"
                 return "stable"
 
-            drift_current = (
-                session.query(DriftEvent).filter(DriftEvent.status == "open").count()
-            )
+            drift_current = session.query(DriftEvent).filter(DriftEvent.status == "open").count()
             drift_history_runs = (
                 session.query(CollectionRun)
                 .filter(
