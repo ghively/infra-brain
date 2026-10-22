@@ -1668,7 +1668,6 @@ class CloudNetOverviewOut(BaseModel):
     summary: CloudNetSummaryOut = CloudNetSummaryOut()
 
 
-
 # ---------------------------------------------------------------------------
 # Fleet Assets — dedicated view (Rapid7 asset inventory)
 # ---------------------------------------------------------------------------

@@ -666,8 +666,7 @@ def test_collect_updates_existing_instinct_despite_changed_count():
 
     # No brand-new duplicate Instinct row should have been added for this key.
     assert mock_session.add.call_count == 0, (
-        "A changed occurrence count must not defeat dedup and create a "
-        "duplicate Instinct row"
+        "A changed occurrence count must not defeat dedup and create a duplicate Instinct row"
     )
     # The existing row should have been updated in place instead.
     assert existing_instinct.confidence > 0.1

@@ -93,11 +93,11 @@ def _enforce_llm_cost_limits(user_key: str) -> None:
             detail={
                 "code": "token_budget_exceeded",
                 "message": (
-                    "Daily LLM token budget exhausted for your account. "
-                    "It resets at 00:00 UTC."
+                    "Daily LLM token budget exhausted for your account. It resets at 00:00 UTC."
                 ),
             },
         )
+
 
 # Chat & Custom Views — same session gate and prefix as the main dashboard router.
 # Routes: POST /api/dashboard/chat, POST /api/dashboard/custom-view,
@@ -184,9 +184,7 @@ async def _chat_sse(message: str, thread_id: str, user_key: str):
                 "error",
                 {
                     "code": "conversation_too_long",
-                    "message": (
-                        f"This conversation has reached its {CHAT_MAX_TURNS}-turn limit."
-                    ),
+                    "message": (f"This conversation has reached its {CHAT_MAX_TURNS}-turn limit."),
                     "hints": ["Start a new conversation to keep going."],
                     "token": "\n\n[error: conversation turn limit reached]",
                 },

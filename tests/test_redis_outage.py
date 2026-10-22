@@ -54,4 +54,7 @@ def test_db_failure_while_recording_outage_is_swallowed_not_raised(caplog):
     ):
         record_redis_outage_run("linux")  # must not raise
 
-    assert any("db also down" in r.getMessage() or "failed to record" in r.getMessage() for r in caplog.records)
+    assert any(
+        "db also down" in r.getMessage() or "failed to record" in r.getMessage()
+        for r in caplog.records
+    )

@@ -596,7 +596,9 @@ def test_full_access_key_write_is_logged_for_visibility(caplog):
     from infra_brain.mcp_auth import ALL_TOOL_NAMES
 
     with (
-        patch("infra_brain.mcp_server.lookup_active_key", return_value=(uuid.uuid4(), ALL_TOOL_NAMES)),
+        patch(
+            "infra_brain.mcp_server.lookup_active_key", return_value=(uuid.uuid4(), ALL_TOOL_NAMES)
+        ),
         patch("infra_brain.mcp_server.touch_last_used"),
         patch("infra_brain.mcp_server.get_session") as mock_session,
     ):
@@ -750,9 +752,7 @@ def test_oversized_correlated_is_refused(patched_session, mutations_enabled):
     with Session(patched_session) as s:
         de_id = _drift(s).id
 
-    result = mcp_server.record_rootcause_note(
-        str(de_id), "why", "operator", {"blob": "x" * 20000}
-    )
+    result = mcp_server.record_rootcause_note(str(de_id), "why", "operator", {"blob": "x" * 20000})
 
     assert "exceeds" in result["error"]
     with Session(patched_session) as s:

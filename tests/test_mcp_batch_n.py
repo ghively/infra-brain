@@ -72,7 +72,9 @@ def test_get_homelab_service_category_empty_table_returns_empty_list(patched_ses
 def test_get_homelab_service_category_unfiltered_returns_all(patched_session):
     _seed_service(patched_session, "sonarr", "media-management", "http://x:8989", "up", 200)
     _seed_service(patched_session, "emby", "media-server", "http://x:8096", "up", 200)
-    _seed_service(patched_session, "grafana", "observability-visualization", "http://x:3002", "down", None)
+    _seed_service(
+        patched_session, "grafana", "observability-visualization", "http://x:3002", "down", None
+    )
 
     rows = mcp_server.get_homelab_service_category()
     assert len(rows) == 3

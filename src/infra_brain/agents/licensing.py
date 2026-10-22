@@ -130,7 +130,9 @@ class LicensingAgent(ETLConnector):
             with get_session() as session:
                 installed = self._installed_host_sets_by_product(session)
         except Exception:
-            logger.warning("LicensingAgent: failed to read installed-software inventory", exc_info=True)
+            logger.warning(
+                "LicensingAgent: failed to read installed-software inventory", exc_info=True
+            )
             raise
 
         now = datetime.now(UTC)

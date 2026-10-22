@@ -49,19 +49,39 @@ def client(engine, monkeypatch):
 def _seed(engine):
     with Session(engine) as s:
         known = NetDiscoveryHost(
-            ip="10.0.0.5", mac="aa:bb:cc:00:00:01", hostname="known-printer",
-            responded=True, discovery_tier="tier1", is_known=True, is_shadow_it=False,
-            threat_level="none", zone="corp",
+            ip="10.0.0.5",
+            mac="aa:bb:cc:00:00:01",
+            hostname="known-printer",
+            responded=True,
+            discovery_tier="tier1",
+            is_known=True,
+            is_shadow_it=False,
+            threat_level="none",
+            zone="corp",
         )
         shadow = NetDiscoveryHost(
-            ip="10.0.0.66", mac="aa:bb:cc:00:00:02", hostname="",
-            responded=True, discovery_tier="tier2", is_known=False, is_shadow_it=True,
-            threat_level="high", zone="corp",
+            ip="10.0.0.66",
+            mac="aa:bb:cc:00:00:02",
+            hostname="",
+            responded=True,
+            discovery_tier="tier2",
+            is_known=False,
+            is_shadow_it=True,
+            threat_level="high",
+            zone="corp",
         )
         s.add_all([known, shadow])
         s.flush()
-        s.add(NetDiscoveryService(host_id=shadow.id, port=23, proto="tcp", service="telnet", is_dangerous=True))
-        s.add(NetDiscoveryService(host_id=shadow.id, port=80, proto="tcp", service="http", banner="Apache/2.4"))
+        s.add(
+            NetDiscoveryService(
+                host_id=shadow.id, port=23, proto="tcp", service="telnet", is_dangerous=True
+            )
+        )
+        s.add(
+            NetDiscoveryService(
+                host_id=shadow.id, port=80, proto="tcp", service="http", banner="Apache/2.4"
+            )
+        )
         s.commit()
         return str(known.id), str(shadow.id)
 
@@ -126,26 +146,46 @@ def test_threat_level_sort_is_severity_ranked_not_lexicographic(client, engine):
         # Insertion order deliberately scrambled and NOT alphabetical/severity
         # order, so a passing test can't be an artifact of insertion order.
         low = NetDiscoveryHost(
-            ip="192.0.2.12", threat_level="low", is_known=False, is_shadow_it=True,
-            discovery_tier="tier1", last_seen=base_time,
+            ip="192.0.2.12",
+            threat_level="low",
+            is_known=False,
+            is_shadow_it=True,
+            discovery_tier="tier1",
+            last_seen=base_time,
         )
         none_ = NetDiscoveryHost(
-            ip="192.0.2.14", threat_level="none", is_known=True, is_shadow_it=False,
-            discovery_tier="passive", last_seen=base_time,
+            ip="192.0.2.14",
+            threat_level="none",
+            is_known=True,
+            is_shadow_it=False,
+            discovery_tier="passive",
+            last_seen=base_time,
         )
         high_older = NetDiscoveryHost(
-            ip="192.0.2.15", threat_level="high", is_known=False, is_shadow_it=True,
-            discovery_tier="tier2", last_seen=base_time,
+            ip="192.0.2.15",
+            threat_level="high",
+            is_known=False,
+            is_shadow_it=True,
+            discovery_tier="tier2",
+            last_seen=base_time,
         )
         med = NetDiscoveryHost(
-            ip="192.0.2.16", threat_level="med", is_known=False, is_shadow_it=True,
-            discovery_tier="tier1", last_seen=base_time,
+            ip="192.0.2.16",
+            threat_level="med",
+            is_known=False,
+            is_shadow_it=True,
+            discovery_tier="tier1",
+            last_seen=base_time,
         )
         # Second "high" host, seen more recently, to verify the last_seen
         # tiebreak still applies within a shared threat level.
         high_newer = NetDiscoveryHost(
-            ip="192.0.2.17", threat_level="high", is_known=False, is_shadow_it=True,
-            discovery_tier="tier2", last_seen=base_time + timedelta(hours=1),
+            ip="192.0.2.17",
+            threat_level="high",
+            is_known=False,
+            is_shadow_it=True,
+            discovery_tier="tier2",
+            last_seen=base_time + timedelta(hours=1),
         )
         s.add_all([low, none_, high_older, med, high_newer])
         s.commit()

@@ -35,7 +35,9 @@ def test_build_domain_page_body_escapes_special_xhtml_chars():
     import re
 
     for m in re.finditer(r"&(?!amp;|lt;|gt;|quot;|#39;)", body):
-        raise AssertionError(f"unescaped '&' found in body at position {m.start()}: {body[m.start():m.start()+20]!r}")
+        raise AssertionError(
+            f"unescaped '&' found in body at position {m.start()}: {body[m.start() : m.start() + 20]!r}"
+        )
 
 
 def test_upsert_creates_page_if_not_exists():

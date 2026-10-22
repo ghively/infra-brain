@@ -159,9 +159,7 @@ def test_dry_run_flags_existing_note_as_skipped(patched_session, mutations_enabl
 
 
 def test_cap_refuses_the_whole_call_before_any_db_work(patched_session, mutations_enabled):
-    oversized = [
-        {"drift_event_id": str(uuid.uuid4()), "explanation": "why"} for _ in range(101)
-    ]
+    oversized = [{"drift_event_id": str(uuid.uuid4()), "explanation": "why"} for _ in range(101)]
 
     result = mcp_server.record_rootcause_notes_bulk(oversized, dry_run=False)
 
@@ -242,9 +240,7 @@ def test_per_item_savepoint_isolates_one_failure_from_the_rest(patched_session, 
         assert recorded_ids == {str(good_id), str(also_good_id)}
 
 
-def test_per_item_savepoint_actually_rolls_back_a_real_db_error(
-    patched_session, mutations_enabled
-):
+def test_per_item_savepoint_actually_rolls_back_a_real_db_error(patched_session, mutations_enabled):
     """The test above (not-found) never raises inside begin_nested() -- the
     `not_found` branch returns normally, so neither the except-Exception
     handler nor a real SAVEPOINT rollback ever runs. This test injects a

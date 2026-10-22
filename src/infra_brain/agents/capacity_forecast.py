@@ -160,8 +160,8 @@ class CapacityForecastAgent(BaseAgent):
                 # MoRefs are only unique within a single vCenter instance (see
                 # VsphereDatastore's UniqueConstraint("vcenter", "moref", ...)
                 # and the same convention used by agents/vsphere.py, GitLab #184).
-                by_vcenter_moref: dict[tuple[str, str], list[VsphereDatastoreMetric]] = (
-                    defaultdict(list)
+                by_vcenter_moref: dict[tuple[str, str], list[VsphereDatastoreMetric]] = defaultdict(
+                    list
                 )
                 for row in rows:
                     samples = by_vcenter_moref[(row.vcenter, row.moref)]

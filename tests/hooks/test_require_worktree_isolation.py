@@ -16,6 +16,7 @@ Coverage:
   * bug 3 — override token is word-boundary matched, so an embedded-substring bypass
     does NOT override and prose merely mentioning the token does NOT override.
 """
+
 import importlib.util
 import io
 import json
@@ -26,10 +27,7 @@ import pytest
 
 # --- load the hyphen-named hook module from its file path ---------------------------
 _HOOK_PATH = (
-    Path(__file__).resolve().parents[2]
-    / ".claude"
-    / "hooks"
-    / "require-worktree-isolation.py"
+    Path(__file__).resolve().parents[2] / ".claude" / "hooks" / "require-worktree-isolation.py"
 )
 _spec = importlib.util.spec_from_file_location("require_worktree_isolation", _HOOK_PATH)
 hook = importlib.util.module_from_spec(_spec)
@@ -65,25 +63,19 @@ def test_code_writing_dispatch_blocks_without_isolation():
 
 
 def test_isolation_worktree_allows():
-    data = agent_payload(
-        prompt="Implement the new retry decorator", isolation="worktree"
-    )
+    data = agent_payload(prompt="Implement the new retry decorator", isolation="worktree")
     assert code_exit(data) == ALLOW
 
 
 @pytest.mark.parametrize("subagent", sorted(hook.READ_ONLY_SUBAGENTS))
 def test_read_only_subagent_types_allow(subagent):
     # Even with a code-writing verb in the prompt, exempt types pass.
-    data = agent_payload(
-        prompt="Refactor and rewrite the module", subagent_type=subagent
-    )
+    data = agent_payload(prompt="Refactor and rewrite the module", subagent_type=subagent)
     assert code_exit(data) == ALLOW
 
 
 def test_override_token_allows():
-    data = agent_payload(
-        prompt="Implement the parser. NO_WORKTREE_OK — sole dispatch this batch."
-    )
+    data = agent_payload(prompt="Implement the parser. NO_WORKTREE_OK — sole dispatch this batch.")
     assert code_exit(data) == ALLOW
 
 
@@ -96,7 +88,9 @@ def test_non_code_writing_dispatch_allows():
 
 def test_fix_and_migration_phrasings_block():
     assert code_exit(agent_payload(prompt="fix(host_reconcile): guard the correlation")) == BLOCK
-    assert code_exit(agent_payload(prompt="Generate an Alembic migration for the new column")) == BLOCK
+    assert (
+        code_exit(agent_payload(prompt="Generate an Alembic migration for the new column")) == BLOCK
+    )
     assert code_exit(agent_payload(prompt="Scaffold a new domain agent from the template")) == BLOCK
 
 

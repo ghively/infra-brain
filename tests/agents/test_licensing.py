@@ -133,16 +133,8 @@ def _seed_reconciliation_fixture(engine):
         asset = _make_asset_resource(s, "host-under-0")
         _install_windows(s, asset, "Under Product")
 
-        s.add(
-            SoftwareLicense(
-                product="Over Product", license_type="per-seat", seats_entitled=2
-            )
-        )
-        s.add(
-            SoftwareLicense(
-                product="Under Product", license_type="per-seat", seats_entitled=5
-            )
-        )
+        s.add(SoftwareLicense(product="Over Product", license_type="per-seat", seats_entitled=2))
+        s.add(SoftwareLicense(product="Under Product", license_type="per-seat", seats_entitled=5))
         s.commit()
 
 
@@ -392,9 +384,7 @@ def test_installed_base_counted_without_any_graph_derivation(sqlite_engine):
 
 def test_collect_raises_when_installed_inventory_read_fails(sqlite_engine):
     with Session(sqlite_engine) as s:
-        s.add(
-            SoftwareLicense(product="Any Product", license_type="per-seat", seats_entitled=1)
-        )
+        s.add(SoftwareLicense(product="Any Product", license_type="per-seat", seats_entitled=1))
         s.commit()
 
     call_count = {"n": 0}

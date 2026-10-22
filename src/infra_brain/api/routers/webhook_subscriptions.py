@@ -85,9 +85,7 @@ def _delivery_out(row: WebhookDelivery) -> WebhookDeliveryOut:
 @webhook_subscriptions_router.get("", response_model=WebhookSubscriptionPageOut)
 def list_webhook_subscriptions(_: None = Depends(require_admin)):
     with get_session() as s:
-        rows = (
-            s.query(WebhookSubscription).order_by(WebhookSubscription.created_at.desc()).all()
-        )
+        rows = s.query(WebhookSubscription).order_by(WebhookSubscription.created_at.desc()).all()
         items = [_sub_out(r) for r in rows]
     return WebhookSubscriptionPageOut(items=items, total=len(items))
 
@@ -162,9 +160,7 @@ def delete_webhook_subscription(sub_id: str, _: None = Depends(require_admin)):
     return WebhookSubscriptionDeleteResult(id=sub_id, deleted=True)
 
 
-@webhook_subscriptions_router.post(
-    "/{sub_id}/test", response_model=WebhookTestDeliveryResult
-)
+@webhook_subscriptions_router.post("/{sub_id}/test", response_model=WebhookTestDeliveryResult)
 def send_test_delivery(
     sub_id: str,
     body: WebhookTestDeliveryBody,
@@ -198,17 +194,13 @@ def send_test_delivery(
     return WebhookTestDeliveryResult(id=sub_id, delivered=delivered, error=error)
 
 
-@webhook_subscriptions_router.get(
-    "/{sub_id}/deliveries", response_model=WebhookDeliveryPageOut
-)
+@webhook_subscriptions_router.get("/{sub_id}/deliveries", response_model=WebhookDeliveryPageOut)
 def list_deliveries(sub_id: str, limit: int = 50, _: None = Depends(require_admin)):
     sid = _parse_uuid(sub_id)
     limit = max(1, min(limit, 200))
     with get_session() as s:
         base_query = s.query(WebhookDelivery).filter_by(subscription_id=sid)
         total = base_query.count()
-        rows = (
-            base_query.order_by(WebhookDelivery.created_at.desc()).limit(limit).all()
-        )
+        rows = base_query.order_by(WebhookDelivery.created_at.desc()).limit(limit).all()
         items = [_delivery_out(r) for r in rows]
     return WebhookDeliveryPageOut(items=items, total=total)

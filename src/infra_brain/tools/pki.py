@@ -74,8 +74,7 @@ def crl_ocsp_probe_tool(url: str) -> str:
     """
     if not _is_ssrf_safe_target(url):
         logger.warning(
-            "pki: refusing responder probe to %r — resolves to a private/"
-            "loopback/reserved address",
+            "pki: refusing responder probe to %r — resolves to a private/loopback/reserved address",
             url,
         )
         return "unreachable"

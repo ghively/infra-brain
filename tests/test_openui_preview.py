@@ -102,8 +102,7 @@ def test_formerly_stub_components_fetch_real_data():
     """
     src = _source()
     assert "function useOpenUIFetch" in src, (
-        "The shared useOpenUIFetch hook is missing entirely — every real "
-        "component depends on it."
+        "The shared useOpenUIFetch hook is missing entirely — every real component depends on it."
     )
     missing = []
     for name in FORMERLY_STUB_COMPONENTS:
@@ -124,9 +123,7 @@ def test_fleet_stat_card_unchanged():
     """FleetStatCard was always real and must still not depend on a stub."""
     src = _source()
     body = _function_body(src, f"function {LIVE_COMPONENT}(")
-    assert "PreviewStub" not in body, (
-        f"{LIVE_COMPONENT} must not reference PreviewStub."
-    )
+    assert "PreviewStub" not in body, f"{LIVE_COMPONENT} must not reference PreviewStub."
 
 
 def test_all_components_registered():

@@ -94,7 +94,9 @@ def query_axfr(zone_name: str, resolver_host: str, timeout: float) -> list[dict]
     records: list[dict] = []
     origin = str(zone.origin) if zone.origin is not None else zone_name.rstrip(".") + "."
     for name, node in zone.nodes.items():
-        rec_name = name.derelativize(zone.origin).to_text().rstrip(".") if zone.origin else str(name)
+        rec_name = (
+            name.derelativize(zone.origin).to_text().rstrip(".") if zone.origin else str(name)
+        )
         for rdataset in node.rdatasets:
             rtype = dns.rdatatype.to_text(rdataset.rdtype)
             if rtype not in RECORD_TYPES:

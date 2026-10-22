@@ -41,9 +41,7 @@ class TestRecordEnvironmentNote:
             author="exampleuser",
         )
 
-        assert result["note"] == (
-            "staging DB host is scheduled for decommission next quarter"
-        )
+        assert result["note"] == ("staging DB host is scheduled for decommission next quarter")
         assert result["author"] == "exampleuser"
         assert result["status"] == "open"
         assert result["resolved_by"] is None

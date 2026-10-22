@@ -283,8 +283,7 @@ def test_personal_wiki_resurrects_stale_doc_on_unchanged_hash(
     fake.embed_documents.assert_not_called()  # unchanged hash -> no re-embed
     with Session(sqlite_engine) as v:
         assert (
-            v.query(Document).filter_by(external_id="entities/gitlab.md").one().status
-            == "current"
+            v.query(Document).filter_by(external_id="entities/gitlab.md").one().status == "current"
         )
 
 

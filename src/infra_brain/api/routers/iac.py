@@ -254,7 +254,11 @@ def list_terraform_resources(limit: int = 200, offset: int = 0):
         q = (
             s.query(TerraformResource, IacFile)
             .join(IacFile, IacFile.id == TerraformResource.iac_file_id)
-            .order_by(IacFile.project_name, TerraformResource.resource_type, TerraformResource.resource_name)
+            .order_by(
+                IacFile.project_name,
+                TerraformResource.resource_type,
+                TerraformResource.resource_name,
+            )
         )
         total = q.count()
         rows = q.offset(offset).limit(limit).all()
@@ -316,8 +320,7 @@ def ansible_structure():
                     project_name=f.project_name or "",
                     file_path=f.path,
                     hosts=[
-                        AnsibleInventoryHostOut(name=h.name)
-                        for h in hosts_by_group.get(g.id, [])
+                        AnsibleInventoryHostOut(name=h.name) for h in hosts_by_group.get(g.id, [])
                     ],
                 )
                 for g, f in groups

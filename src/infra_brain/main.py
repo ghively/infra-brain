@@ -470,7 +470,9 @@ def create_app() -> FastAPI:
         return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
     app.include_router(webhook_router)
-    app.include_router(chatops_router)  # inbound Slack/Teams chatops bot (GitLab #111; HMAC-gated, not session)
+    app.include_router(
+        chatops_router
+    )  # inbound Slack/Teams chatops bot (GitLab #111; HMAC-gated, not session)
     app.include_router(dashboard_auth_router)  # login/logout/me (ungated)
     app.include_router(dashboard_router)  # data + actions (session-gated)
     app.include_router(governance_drift_router)  # drift events + notifications (session-gated)
@@ -506,14 +508,18 @@ def create_app() -> FastAPI:
     app.include_router(hosts_router)  # Unified host identity view (session-gated)
     app.include_router(graph_router)  # Knowledge graph traversal (session-gated)
     app.include_router(mcp_keys_router)  # MCP scoped-key management (session/admin-gated)
-    app.include_router(runtime_config_router)  # RuntimeConfig tuning CRUD (session/admin-gated, TRK-303)
+    app.include_router(
+        runtime_config_router
+    )  # RuntimeConfig tuning CRUD (session/admin-gated, TRK-303)
     app.include_router(settings_catalog_router)  # Derived Settings catalog (admin-gated)
     app.include_router(graphql_router)  # Read-only GraphQL query layer (session-gated, GitLab #114)
     app.include_router(
         webhook_subscriptions_router
     )  # outbound webhook subscription mgmt (session/admin-gated, issue #112)
     app.include_router(state_backend_router)  # Phase 4 state-backend REST counterparts (P4.3e)
-    app.include_router(internal_state_router)  # infra-ops hook write path (bearer-token-gated, P5.1/P5.2)
+    app.include_router(
+        internal_state_router
+    )  # infra-ops hook write path (bearer-token-gated, P5.1/P5.2)
 
     @app.get("/")
     def root():

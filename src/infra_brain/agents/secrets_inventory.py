@@ -319,8 +319,7 @@ def bitwarden_list_secret_metadata_tool(organization_id: str) -> list[dict]:
     """
     settings = get_settings()
     url = (
-        f"{settings.secrets_inventory_url.rstrip('/')}"
-        f"/api/organizations/{organization_id}/secrets"
+        f"{settings.secrets_inventory_url.rstrip('/')}/api/organizations/{organization_id}/secrets"
     )
     body = _get_metadata(url, headers=_headers(BACKEND_BITWARDEN, settings.secrets_inventory_token))
     rows = (body or {}).get("data") or []
@@ -329,7 +328,9 @@ def bitwarden_list_secret_metadata_tool(organization_id: str) -> list[dict]:
         if not isinstance(row, dict):
             continue
         projects = row.get("projects") or []
-        referencing = projects[0].get("name") if projects and isinstance(projects[0], dict) else None
+        referencing = (
+            projects[0].get("name") if projects and isinstance(projects[0], dict) else None
+        )
         projected.append(
             {
                 "key": _clip(row.get("key")),
@@ -373,8 +374,7 @@ class SecretsInventoryAgent(BaseAgent):
         targets = [p for p in targets if p]
         if not targets:
             raise CollectorSkipped(
-                f"secrets_inventory backend '{backend}' configured without "
-                "secrets_inventory_paths"
+                f"secrets_inventory backend '{backend}' configured without secrets_inventory_paths"
             )
 
         if backend == BACKEND_VAULT:

@@ -154,7 +154,10 @@ def test_query_passes_callbacks_via_reason():
     agent.callbacks = sentinel_callbacks
     agent.settings = MagicMock()
 
-    with _llm_configured(), patch.object(agent, "reason", return_value="result text") as mock_reason:
+    with (
+        _llm_configured(),
+        patch.object(agent, "reason", return_value="result text") as mock_reason,
+    ):
         agent.query("list all linux hosts")
 
     mock_reason.assert_called_once()

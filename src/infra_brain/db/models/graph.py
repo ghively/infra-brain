@@ -322,9 +322,7 @@ class GraphEdge(Base):
     __table_args__ = (
         # The vocabulary is load-bearing (it gates who may overwrite whom) and
         # this table is small, so it is enforced in the DB, not only in Python.
-        CheckConstraint(
-            "authority IN ('auto', 'human')", name="ck_graph_edges_authority"
-        ),
+        CheckConstraint("authority IN ('auto', 'human')", name="ck_graph_edges_authority"),
         ForeignKeyConstraint(
             ["source_id"],
             ["graph_nodes.id"],

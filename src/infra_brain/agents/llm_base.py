@@ -508,6 +508,7 @@ def _build_react_system_prompt(max_iters: int, has_tools: bool) -> str:
         + _REACT_SYSTEM_PROMPT_TOOL_LOOP.format(max_iters=max_iters, soft_stop=soft_stop)
     )
 
+
 # T7 (rev14): reasoning capture for AgentDecisionLog                          #
 # --------------------------------------------------------------------------- #
 #

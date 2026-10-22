@@ -469,9 +469,7 @@ def test_confirming_a_previously_rejected_pair_retires_the_veto(session):
         for e in _edges(session, edge_type=GraphEdgeType.NOT_SAME_AS)
         if {e.source_id, e.target_id} == pair
     ]
-    assert active_vetoes == [], (
-        "a pair may never carry an active SAME_AS and NOT_SAME_AS at once"
-    )
+    assert active_vetoes == [], "a pair may never carry an active SAME_AS and NOT_SAME_AS at once"
     retired = [
         e
         for e in _edges(session, edge_type=GraphEdgeType.NOT_SAME_AS, active_only=False)
@@ -581,9 +579,7 @@ def test_reject_refuses_a_target_outside_the_rows_candidates(session):
     _vm, _r7a, _r7b, action = _queue_a_question(session)
     stranger = _node(session, GraphNodeType.OCTOPUS_MACHINE, "Machines-9", "unrelated")
 
-    result = graph_phase3.reject_same_as(
-        session, action.id, "operator", target_node_id=stranger.id
-    )
+    result = graph_phase3.reject_same_as(session, action.id, "operator", target_node_id=stranger.id)
 
     assert "error" in result
     assert _edges(session, edge_type=GraphEdgeType.NOT_SAME_AS) == []

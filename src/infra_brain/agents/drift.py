@@ -299,9 +299,7 @@ class DriftDetector(BaseAgent):
             # it failed on the FIRST live run after deploy. The hard MR gates
             # check raw dashboard SQL on real Postgres but not agent ORM
             # queries; this comment is the warning in lieu of that gate.
-            event_typed = select(Resource.id).where(
-                Resource.type.in_(self._EVENT_SHAPED_TYPES)
-            )
+            event_typed = select(Resource.id).where(Resource.type.in_(self._EVENT_SHAPED_TYPES))
             query = (
                 session.query(Snapshot.resource_id)
                 .filter(Snapshot.resource_id.notin_(event_typed))
@@ -558,9 +556,7 @@ class DriftDetector(BaseAgent):
             # so a truncated-but-labeled text sample is sufficient here.
             sample = ", ".join(f"{rid}:{field}" for rid, field in auto_resolved[:20])
             sample_note = (
-                "sample of first 20 shown"
-                if len(auto_resolved) > 20
-                else "full list shown"
+                "sample of first 20 shown" if len(auto_resolved) > 20 else "full list shown"
             )
             summary = (
                 f"auto-resolved {len(auto_resolved)} drift event(s) "
@@ -665,13 +661,9 @@ class DriftDetector(BaseAgent):
                 )
                 .label("rn")
             )
-            ranked_subq = (
-                session.query(CollectionRun, rn).filter_by(status="completed").subquery()
-            )
+            ranked_subq = session.query(CollectionRun, rn).filter_by(status="completed").subquery()
             RankedRun = aliased(CollectionRun, ranked_subq)
-            completed_runs = (
-                session.query(RankedRun).filter(ranked_subq.c.rn == 1).all()
-            )
+            completed_runs = session.query(RankedRun).filter(ranked_subq.c.rn == 1).all()
             for run in completed_runs:
                 if run.domain not in domain_last_run:
                     domain_last_run[run.domain] = run

@@ -76,9 +76,7 @@ class SecretRecord(Base):
     secret_path: Mapped[str] = mapped_column(String(512), nullable=False)
     # Rotation age source: Vault KV-v2 metadata ``updated_time`` / Bitwarden
     # Secrets Manager ``revisionDate``. NULL when the backend did not report one.
-    last_rotated_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_rotated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Which system / service-account references this secret, as declared in the
     # backend's own METADATA (Vault custom_metadata, Bitwarden project name) —
     # never inferred from, and never containing, the secret's value.

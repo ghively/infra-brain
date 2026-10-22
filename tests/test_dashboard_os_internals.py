@@ -58,9 +58,26 @@ def test_linux_detail_includes_mounts_nics_pending_updates(client, engine):
         lh = LinuxHost(resource_id=r.id, distro="Ubuntu 22.04", kernel="5.15.0", arch="x86_64")
         s.add(lh)
         s.flush()
-        s.add(LinuxMount(host_id=lh.id, mount="/", device="/dev/sda1", fstype="ext4", size_total_gb=100.0, size_available_gb=40.0))
+        s.add(
+            LinuxMount(
+                host_id=lh.id,
+                mount="/",
+                device="/dev/sda1",
+                fstype="ext4",
+                size_total_gb=100.0,
+                size_available_gb=40.0,
+            )
+        )
         s.add(LinuxNic(host_id=lh.id, name="eth0", mac="aa:bb:cc:dd:ee:ff", ipv4="10.0.0.5"))
-        s.add(LinuxPendingUpdate(host_id=lh.id, package="openssl", current_version="1.1.1", available_version="1.1.2", security=True))
+        s.add(
+            LinuxPendingUpdate(
+                host_id=lh.id,
+                package="openssl",
+                current_version="1.1.1",
+                available_version="1.1.2",
+                security=True,
+            )
+        )
         s.commit()
         rid = r.id
 
@@ -98,8 +115,16 @@ def test_windows_detail_includes_services(client, engine):
         r = Resource(domain="windows", type="host", name="win-01", source="WindowsAgent")
         s.add(r)
         s.flush()
-        s.add(WindowsPatchState(resource_id=r.id, hostname="win-01", pending_count=2, winrm_status="ok"))
-        s.add(WindowsService(resource_id=r.id, name="Spooler", state="Running", start_type="Automatic"))
+        s.add(
+            WindowsPatchState(
+                resource_id=r.id, hostname="win-01", pending_count=2, winrm_status="ok"
+            )
+        )
+        s.add(
+            WindowsService(
+                resource_id=r.id, name="Spooler", state="Running", start_type="Automatic"
+            )
+        )
         s.commit()
         rid = r.id
 
@@ -116,7 +141,11 @@ def test_windows_detail_empty_services(client, engine):
         r = Resource(domain="windows", type="host", name="win-02", source="WindowsAgent")
         s.add(r)
         s.flush()
-        s.add(WindowsPatchState(resource_id=r.id, hostname="win-02", pending_count=0, winrm_status="ok"))
+        s.add(
+            WindowsPatchState(
+                resource_id=r.id, hostname="win-02", pending_count=0, winrm_status="ok"
+            )
+        )
         s.commit()
         rid = r.id
 

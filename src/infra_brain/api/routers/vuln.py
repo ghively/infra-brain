@@ -116,9 +116,7 @@ def list_vulns(
         # every SQL-matching row while items only counted the ones surviving the
         # enrichment filter on that one page).
         rows = (
-            q.order_by(VulnQueueItem.sla_due.asc().nullslast())
-            .limit(_VULN_CANDIDATE_CEILING)
-            .all()
+            q.order_by(VulnQueueItem.sla_due.asc().nullslast()).limit(_VULN_CANDIDATE_CEILING).all()
         )
 
         best = _best_vuln_by_cve(s, [v.cve_id for v, _ in rows])
@@ -152,9 +150,7 @@ def list_vulns(
         return VulnPageOut(items=out, total=total, limit=limit, offset=offset)
 
 
-@vuln_router.get(
-    "/remediation", response_model=RemediationPageOut | RemediationRollupOut
-)
+@vuln_router.get("/remediation", response_model=RemediationPageOut | RemediationRollupOut)
 def list_remediation(
     status: str | None = None,
     view: str = "detail",

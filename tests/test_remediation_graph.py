@@ -318,9 +318,7 @@ def test_execute_one_treats_branch_exists_as_executed(monkeypatch):
 
     mr = MagicMock(side_effect=_branch_exists_error())
     with patch("infra_brain.agents.remediation.create_inventory_mr", mr):
-        new_status, result_url, error = _stub_agent()._execute_one(
-            action_id, "config_fix", payload
-        )
+        new_status, result_url, error = _stub_agent()._execute_one(action_id, "config_fix", payload)
     assert mr.call_count == 1  # 400 is non-retryable — no retries burned
     assert new_status == "executed"
     assert result_url is None
@@ -342,9 +340,7 @@ def test_execute_one_already_exists_without_branch_word_is_not_treated_as_execut
         response=httpx.Response(400, request=req, text='{"message": "File already exists"}'),
     )
     with patch("infra_brain.agents.remediation.create_inventory_mr", MagicMock(side_effect=err)):
-        new_status, result_url, error = _stub_agent()._execute_one(
-            action_id, "config_fix", payload
-        )
+        new_status, result_url, error = _stub_agent()._execute_one(action_id, "config_fix", payload)
     assert new_status is None
     assert result_url is None
     assert error is not None  # a real failure, not a benign no-op
@@ -359,9 +355,7 @@ def test_execute_one_other_400_is_failure_not_executed(monkeypatch):
         "HTTP 400", request=req, response=httpx.Response(400, request=req, text="bad ref")
     )
     with patch("infra_brain.agents.remediation.create_inventory_mr", MagicMock(side_effect=err)):
-        new_status, result_url, error = _stub_agent()._execute_one(
-            action_id, "config_fix", payload
-        )
+        new_status, result_url, error = _stub_agent()._execute_one(action_id, "config_fix", payload)
     assert new_status is None
     assert result_url is None
     assert error is not None  # a real failure, not a benign no-op

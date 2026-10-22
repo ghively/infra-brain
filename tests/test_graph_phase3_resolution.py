@@ -56,9 +56,7 @@ def _node(session, node_type, key, name, source="test", resource_id=None, attrib
 
 def _same_as_edges(session):
     return (
-        session.execute(
-            select(GraphEdge).where(GraphEdge.edge_type == GraphEdgeType.SAME_AS.value)
-        )
+        session.execute(select(GraphEdge).where(GraphEdge.edge_type == GraphEdgeType.SAME_AS.value))
         .scalars()
         .all()
     )
@@ -350,9 +348,7 @@ def test_a_bare_rejected_status_flip_reopens_rather_than_silencing(session):
 
 def test_queue_candidates_are_ranked_and_capped(session):
     src = _node(session, GraphNodeType.VSPHERE_VM, "vc1:vm-1", "web01")
-    cands = [
-        {"node_id": str(uuid.uuid4()), "score": s / 100, "reason": "x"} for s in range(50, 70)
-    ]
+    cands = [{"node_id": str(uuid.uuid4()), "score": s / 100, "reason": "x"} for s in range(50, 70)]
     action = graph_phase3.queue_for_review(session, src, cands)
     stored = action.payload["candidate_matches"]
     assert len(stored) == graph_phase3.MAX_REVIEW_CANDIDATES
@@ -382,7 +378,9 @@ def test_queue_for_review_refreshes_stale_candidates_on_an_existing_pending_row(
     assert first is not None
     assert first.payload["candidate_matches"][0]["node_id"] == str(stale_cand.id)
 
-    fresh_cand = _node(session, GraphNodeType.OCTOPUS_MACHINE, "Machines-1", "web01-fresh-candidate")
+    fresh_cand = _node(
+        session, GraphNodeType.OCTOPUS_MACHINE, "Machines-1", "web01-fresh-candidate"
+    )
     second = graph_phase3.queue_for_review(
         session,
         src,
@@ -467,7 +465,10 @@ def test_ambiguous_key_anchor_is_deterministic_regardless_of_row_fetch_order(ses
         _node(session_a, GraphNodeType.R7_ASSET, "1", "web01")
         graph_phase3.resolve_entities(session_a, materialize=False)
         row_a = _queue(session_a)[0]
-        anchor_a = (row_a.payload["source_node"]["node_type"], row_a.payload["source_node"]["natural_key"])
+        anchor_a = (
+            row_a.payload["source_node"]["node_type"],
+            row_a.payload["source_node"]["natural_key"],
+        )
 
     engine_b = make_engine()
     with Session(engine_b) as session_b:
@@ -477,7 +478,10 @@ def test_ambiguous_key_anchor_is_deterministic_regardless_of_row_fetch_order(ses
         _node(session_b, GraphNodeType.R7_ASSET, "2", "web01")
         graph_phase3.resolve_entities(session_b, materialize=False)
         row_b = _queue(session_b)[0]
-        anchor_b = (row_b.payload["source_node"]["node_type"], row_b.payload["source_node"]["natural_key"])
+        anchor_b = (
+            row_b.payload["source_node"]["node_type"],
+            row_b.payload["source_node"]["natural_key"],
+        )
 
     assert anchor_a == anchor_b, (
         "KG-7: the ambiguous-key anchor changed depending on row insertion/"
@@ -519,9 +523,9 @@ def test_shared_mac_corroborates_vsphere_and_rapid7_match_despite_different_name
         )
     )
     session.flush()
-    assert (
-        graph_phase3._score_pair("alpha-vm", "zulu-asset") < graph_phase3.FUZZY_REVIEW_MIN
-    ), "fixture must be a genuine name near-miss so only mac corroboration explains an edge"
+    assert graph_phase3._score_pair("alpha-vm", "zulu-asset") < graph_phase3.FUZZY_REVIEW_MIN, (
+        "fixture must be a genuine name near-miss so only mac corroboration explains an edge"
+    )
 
     counts = graph_phase3.resolve_entities(session, materialize=True)
 
@@ -610,7 +614,9 @@ def test_confirm_same_as_upgrades_an_existing_probabilistic_edge(session):
     vm = _node(session, GraphNodeType.VSPHERE_VM, "vc1:vm-1", "web01")
     oct_ = _node(session, GraphNodeType.OCTOPUS_MACHINE, "Machines-1", "web-01")
     graph_phase3.resolve_entities(session, materialize=False)
-    assert all(e.method == GraphEdgeMethod.PROBABILISTIC_MATCH.value for e in _same_as_edges(session))
+    assert all(
+        e.method == GraphEdgeMethod.PROBABILISTIC_MATCH.value for e in _same_as_edges(session)
+    )
 
     graph_phase3.confirm_same_as(session, vm.id, oct_.id, "operator")
 
@@ -689,7 +695,9 @@ def test_retract_same_as_closes_edges_and_reopens_review_queue(session):
     assert all(e.valid_to is None for e in _same_as_edges(session))
     assert _queue(session)[0].status == "approved"
 
-    result = graph_phase3.retract_same_as(session, vm.id, r7a.id, "operator-again", reason="wrong match")
+    result = graph_phase3.retract_same_as(
+        session, vm.id, r7a.id, "operator-again", reason="wrong match"
+    )
 
     assert result["retracted"] is True
     assert result["review_reopened"] is True
@@ -881,7 +889,9 @@ def test_end_to_end_resolution_over_real_source_tables(session):
     )
     rres = _resource(session, "web01", "rapid7")
     session.add(
-        R7Asset(id=uuid.uuid4(), resource_id=rres.id, r7_asset_id=42, hostname="web01", ip="10.0.0.1")
+        R7Asset(
+            id=uuid.uuid4(), resource_id=rres.id, r7_asset_id=42, hostname="web01", ip="10.0.0.1"
+        )
     )
     session.flush()
 
@@ -954,9 +964,9 @@ def test_uuid_corroboration_auto_emits_despite_different_names(session):
         source="octopus",
         attributes={"uuid": "shared-uuid-1"},
     )
-    assert (
-        graph_phase3._score_pair("alpha-vm", "zulu-machine") < graph_phase3.FUZZY_REVIEW_MIN
-    ), "fixture must be a genuine name near-miss so only uuid corroboration explains an edge"
+    assert graph_phase3._score_pair("alpha-vm", "zulu-machine") < graph_phase3.FUZZY_REVIEW_MIN, (
+        "fixture must be a genuine name near-miss so only uuid corroboration explains an edge"
+    )
 
     counts = graph_phase3.resolve_entities(session, materialize=False)
 

@@ -76,9 +76,7 @@ def resolve_environment_note_route(note_id: str, request: Request):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@state_backend_router.get(
-    "/instincts/{instinct_id}/history", response_model=InstinctHistoryOut
-)
+@state_backend_router.get("/instincts/{instinct_id}/history", response_model=InstinctHistoryOut)
 def get_instinct_history_route(instinct_id: str):
     try:
         return get_instinct_history(instinct_id=instinct_id)

@@ -219,5 +219,7 @@ def test_permissive_mode_pan_detection_logs_at_error_not_warning(caplog):
 
     error_records = [r for r in caplog.records if r.levelno == logging.ERROR]
     warning_records = [r for r in caplog.records if r.levelno == logging.WARNING]
-    assert error_records, f"expected the permissive-mode PAN detection to log at ERROR; got {[r.levelname for r in caplog.records]}"
+    assert error_records, (
+        f"expected the permissive-mode PAN detection to log at ERROR; got {[r.levelname for r in caplog.records]}"
+    )
     assert not warning_records, "permissive-mode PAN detection must not log at WARNING (#85)"

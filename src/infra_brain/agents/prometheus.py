@@ -67,8 +67,7 @@ class PrometheusAgent(ETLConnector):
         base_url = (self.settings.prometheus_url or "").strip()
         if not base_url:
             raise CollectorSkipped(
-                "prometheus_url not configured; set PROMETHEUS_URL to enable "
-                "Prometheus collection"
+                "prometheus_url not configured; set PROMETHEUS_URL to enable Prometheus collection"
             )
 
         _cb = {"callbacks": self.callbacks}

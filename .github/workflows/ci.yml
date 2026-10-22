@@ -57,7 +57,12 @@ jobs:
         env:
           PG_GATE_DSN: postgresql://infra:infra@localhost:5432/infra_brain_ci
         run: |
-          uv run pytest $(cat tests/support/agent_orm_check_paths.txt) -q
+          # Read only real path lines: comments and blanks in the list file are
+          # documentation, not pytest arguments.
+          mapfile -t paths < <(grep -vE '^[[:space:]]*(#|$)' tests/support/agent_orm_check_paths.txt)
+          if [ "${#paths[@]}" -eq 0 ]; then echo "no gate paths found" >&2; exit 1; fi
+          echo "Running ${#paths[@]} gate paths against Postgres"
+          uv run pytest "${paths[@]}" -q
 
   migration-check:
     runs-on: ubuntu-latest

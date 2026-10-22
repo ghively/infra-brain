@@ -831,11 +831,7 @@ def test_iac_secret_scan_sets_collection_run_id(make_agent, sqlite_engine, sessi
     # detail-write is skipped and the assertion below sees no row at all.
     # (agent-orm-check gate, TRK-356.)
     with Session(sqlite_engine) as s:
-        s.add(
-            CollectionRun(
-                id=run_id, domain="iac", trigger_type="scheduled", status="completed"
-            )
-        )
+        s.add(CollectionRun(id=run_id, domain="iac", trigger_type="scheduled", status="completed"))
         s.commit()
     agent = _secret_scan_agent(make_agent, sqlite_engine)
     with session_patcher("infra_brain.agents.iac"):

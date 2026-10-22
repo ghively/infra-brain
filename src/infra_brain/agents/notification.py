@@ -113,8 +113,7 @@ class NotificationAgent(BaseAgent):
         ops_enabled = bool((self.settings.ops_webhook_url or "").strip())
         if not ops_enabled:
             _logger.info(
-                "[notification] ops webhook not configured; skipping delivery of "
-                "%d %s alert(s)",
+                "[notification] ops webhook not configured; skipping delivery of %d %s alert(s)",
                 len(messages),
                 category,
             )
@@ -130,8 +129,7 @@ class NotificationAgent(BaseAgent):
                     )
             except Exception:
                 _logger.error(
-                    "[notification] failed to record ops-webhook skip audit row for "
-                    "category=%s",
+                    "[notification] failed to record ops-webhook skip audit row for category=%s",
                     category,
                     exc_info=True,
                 )

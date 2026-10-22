@@ -47,9 +47,7 @@ class ResourceOwnership(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_now, onupdate=_now
     )
-    __table_args__ = (
-        UniqueConstraint("resource_id", name="uq_resource_ownership_resource_id"),
-    )
+    __table_args__ = (UniqueConstraint("resource_id", name="uq_resource_ownership_resource_id"),)
 
 
 __all__ = ["ResourceOwnership"]

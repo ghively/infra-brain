@@ -46,7 +46,9 @@ class IdentityPrincipal(Base):
     username: Mapped[str] = mapped_column(String(256), default="")
     email: Mapped[str | None] = mapped_column(String(256), nullable=True)
     display_name: Mapped[str | None] = mapped_column(String(256), nullable=True)
-    status: Mapped[str] = mapped_column(String(32), default="")  # ACTIVE|SUSPENDED|DEPROVISIONED|...
+    status: Mapped[str] = mapped_column(
+        String(32), default=""
+    )  # ACTIVE|SUSPENDED|DEPROVISIONED|...
     is_service_account: Mapped[bool] = mapped_column(Boolean, default=False)
     details: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)

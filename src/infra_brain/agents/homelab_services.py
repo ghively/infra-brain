@@ -58,7 +58,9 @@ _PROBE_TIMEOUT_SECONDS = 5.0
 # without touching code — see this module's own docstring / the task notes
 # for the exact field name. Until that field exists, ``collect()`` falls back
 # to this constant unless a caller passes ``manifest_path`` explicitly.
-DEFAULT_MANIFEST_PATH = str(Path(__file__).resolve().parent.parent / "homelab_services_manifest.json")
+DEFAULT_MANIFEST_PATH = str(
+    Path(__file__).resolve().parent.parent / "homelab_services_manifest.json"
+)
 
 
 def _load_manifest(manifest_path: str) -> list[dict]:
@@ -84,7 +86,9 @@ def _load_manifest(manifest_path: str) -> list[dict]:
     try:
         raw = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError) as exc:
-        raise CollectorSkipped(f"homelab services manifest at '{manifest_path}' is unreadable: {exc}") from None
+        raise CollectorSkipped(
+            f"homelab services manifest at '{manifest_path}' is unreadable: {exc}"
+        ) from None
 
     services = raw.get("services") if isinstance(raw, dict) else None
     if not isinstance(services, list):

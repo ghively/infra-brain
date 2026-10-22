@@ -68,9 +68,7 @@ def test_saas_api_keys_tool_returns_records_when_configured():
         gs.return_value.saas_admin_url = "https://saas-admin.example.com"
         gs.return_value.saas_admin_token = "tok"
         gs.return_value.api_timeout_seconds = 30
-        mock_get.return_value = _resp(
-            {"items": [{"scope": "read", "value": "sk-abc123"}]}
-        )
+        mock_get.return_value = _resp({"items": [{"scope": "read", "value": "sk-abc123"}]})
         result = saas_api_keys_tool.invoke({"app": "slack"})
     assert result[0]["scope"] == "read"
     assert "value" not in result[0]

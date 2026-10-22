@@ -112,7 +112,6 @@ from infra_brain.db.models import (
 )
 
 
-
 from tests.support.pg import make_engine
 
 
@@ -127,6 +126,7 @@ def _legacy_store_absent(session) -> None:
     from sqlalchemy import inspect as _sqla_inspect
 
     assert "resource_relationships" not in _sqla_inspect(session.get_bind()).get_table_names()
+
 
 # ---------------------------------------------------------------------------
 # (a) source-level proof

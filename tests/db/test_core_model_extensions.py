@@ -51,7 +51,15 @@ def test_instinct_column_surface():
     assert cols["version"].server_default is not None
     assert cols["status"].server_default is not None
     # pre-existing columns untouched
-    for name in ("zone", "domain", "pattern", "confidence", "promoted_by", "promoted_at", "citation"):
+    for name in (
+        "zone",
+        "domain",
+        "pattern",
+        "confidence",
+        "promoted_by",
+        "promoted_at",
+        "citation",
+    ):
         assert name in cols
 
 
@@ -65,8 +73,17 @@ def test_document_column_surface():
     # sensitivity kept (vestigial per D7), not removed
     assert "sensitivity" in cols
     # pre-existing provenance columns untouched
-    for name in ("title", "source", "indexed_at", "external_id", "space", "url",
-                 "source_version", "content_hash", "status"):
+    for name in (
+        "title",
+        "source",
+        "indexed_at",
+        "external_id",
+        "space",
+        "url",
+        "source_version",
+        "content_hash",
+        "status",
+    ):
         assert name in cols
 
 

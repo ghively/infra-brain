@@ -116,7 +116,8 @@ def test_no_reachable_hosts_raises():
             ansible_mod.subprocess,
             "run",
             return_value=_proc(stdout="hostA | UNREACHABLE! => {}\n"),
-        ),pytest.raises(RuntimeError) as exc_info
+        ),
+        pytest.raises(RuntimeError) as exc_info,
     ):
         ansible_mod.run_ansible_facts("all", "")
 

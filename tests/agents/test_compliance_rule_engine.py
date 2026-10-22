@@ -438,9 +438,7 @@ def test_unaddressed_action_like_wildcards_are_escaped_not_interpreted(engine):
     asserts the violation still fires."""
     now = datetime.now(UTC)
     with Session(engine) as s:
-        cve_host = Resource(
-            domain="vuln", type="r7_asset", name="web_01", source="VulnAgent"
-        )
+        cve_host = Resource(domain="vuln", type="r7_asset", name="web_01", source="VulnAgent")
         s.add(cve_host)
         s.flush()
         s.add(
@@ -483,9 +481,7 @@ def test_unaddressed_action_still_matches_real_action_for_underscore_host(engine
     (underscore and all) must still suppress the violation."""
     now = datetime.now(UTC)
     with Session(engine) as s:
-        cve_host = Resource(
-            domain="vuln", type="r7_asset", name="web_01", source="VulnAgent"
-        )
+        cve_host = Resource(domain="vuln", type="r7_asset", name="web_01", source="VulnAgent")
         s.add(cve_host)
         s.flush()
         s.add(

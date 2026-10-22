@@ -156,9 +156,7 @@ class DriftLearningAgent(BaseAgent):
                 resource_ids = {rid for (rid, _dt, _f) in counter}
                 resources_by_id: dict = {}
                 if resource_ids:
-                    for res in (
-                        session.query(Resource).filter(Resource.id.in_(resource_ids)).all()
-                    ):
+                    for res in session.query(Resource).filter(Resource.id.in_(resource_ids)).all():
                         resources_by_id[res.id] = res
 
                 # M-4: cache the "existing Instinct rows for this domain"

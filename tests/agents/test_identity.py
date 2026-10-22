@@ -48,9 +48,7 @@ MOCK_GROUP_MEMBERS = {
 
 class TestCollectSkippedWhenUnconfigured:
     def test_collect_raises_skipped_when_unconfigured(self, make_agent):
-        agent = make_agent(
-            IdentityAgent, settings=SimpleNamespace(okta_url="", okta_api_token="")
-        )
+        agent = make_agent(IdentityAgent, settings=SimpleNamespace(okta_url="", okta_api_token=""))
         with pytest.raises(CollectorSkipped):
             agent.collect("all")
 
@@ -67,9 +65,7 @@ class TestCollectSuccess:
     def test_collect_emits_principal_and_group_resources(self, make_agent):
         agent = make_agent(
             IdentityAgent,
-            settings=SimpleNamespace(
-                okta_url="https://example.okta.com", okta_api_token="tok123"
-            ),
+            settings=SimpleNamespace(okta_url="https://example.okta.com", okta_api_token="tok123"),
         )
         with (
             patch("infra_brain.agents.identity.okta_users_tool") as mock_users,
@@ -95,9 +91,7 @@ class TestCollectSuccess:
     def test_collect_returns_empty_when_okta_has_no_users_or_groups(self, make_agent):
         agent = make_agent(
             IdentityAgent,
-            settings=SimpleNamespace(
-                okta_url="https://example.okta.com", okta_api_token="tok123"
-            ),
+            settings=SimpleNamespace(okta_url="https://example.okta.com", okta_api_token="tok123"),
         )
         with (
             patch("infra_brain.agents.identity.okta_users_tool") as mock_users,
@@ -118,9 +112,7 @@ class TestCollectSuccess:
         surfaced on the outcome (partial), not swallowed and not fatal."""
         agent = make_agent(
             IdentityAgent,
-            settings=SimpleNamespace(
-                okta_url="https://example.okta.com", okta_api_token="tok123"
-            ),
+            settings=SimpleNamespace(okta_url="https://example.okta.com", okta_api_token="tok123"),
         )
         with (
             patch("infra_brain.agents.identity.okta_users_tool") as mock_users,
@@ -177,7 +169,9 @@ class TestDetailWritePhase:
             assert len(memberships) == 1
             assert memberships[0].group_name == "infra-admins"
 
-    def test_write_identity_details_empty_is_noop(self, make_agent, sqlite_session_factory, monkeypatch):
+    def test_write_identity_details_empty_is_noop(
+        self, make_agent, sqlite_session_factory, monkeypatch
+    ):
         agent = make_agent(IdentityAgent)
         agent._last_users = []
         agent._last_groups = []

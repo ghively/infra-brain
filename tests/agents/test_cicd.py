@@ -195,7 +195,9 @@ def test_pipeline_listing_failure_is_recorded_not_swallowed(monkeypatch):
     agent.settings = None
     agent.callbacks = []
 
-    projects = [{"id": 1, "name": "broken-project", "default_branch": "main", "last_activity_at": ""}]
+    projects = [
+        {"id": 1, "name": "broken-project", "default_branch": "main", "last_activity_at": ""}
+    ]
 
     def _fake_get_paginated(url):
         return projects
@@ -334,9 +336,7 @@ def test_cicd_write_details_populates_typed_tables(make_agent, sqlite_engine, se
     # collapse — must match _FULL_PROJECT's "grp/infra-ops" here too.
     with Session(sqlite_engine) as s:
         s.add(
-            Resource(
-                domain="cicd", type="gitlab_project", name="grp/infra-ops", source="CICDAgent"
-            )
+            Resource(domain="cicd", type="gitlab_project", name="grp/infra-ops", source="CICDAgent")
         )
         s.commit()
 

@@ -24,7 +24,13 @@ def _query_side_effect(*, drift_events=None, violations=None):
     violations = violations if violations is not None else []
 
     def _query(model):
-        items = drift_events if model is DriftEvent else violations if model is ComplianceViolation else []
+        items = (
+            drift_events
+            if model is DriftEvent
+            else violations
+            if model is ComplianceViolation
+            else []
+        )
         q = MagicMock()
         q.filter_by.return_value.all.return_value = items
         q.filter_by.return_value.count.return_value = len(items)
@@ -718,9 +724,7 @@ def test_notify_incidents_correlates_open_drift_event():
 
     with (
         patch("infra_brain.agents.notification.get_session") as mock_ctx,
-        patch(
-            "infra_brain.agents.notification.send_ops_alert", return_value=True
-        ) as mock_send,
+        patch("infra_brain.agents.notification.send_ops_alert", return_value=True) as mock_send,
     ):
         mock_ctx.return_value.__enter__ = lambda s: mock_session
         mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -763,9 +767,7 @@ def test_notify_incidents_correlates_open_compliance_violation():
 
     with (
         patch("infra_brain.agents.notification.get_session") as mock_ctx,
-        patch(
-            "infra_brain.agents.notification.send_ops_alert", return_value=True
-        ) as mock_send,
+        patch("infra_brain.agents.notification.send_ops_alert", return_value=True) as mock_send,
     ):
         mock_ctx.return_value.__enter__ = lambda s: mock_session
         mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -880,9 +882,7 @@ def test_notify_incidents_swallows_exceptions_and_continues():
 
     with (
         patch("infra_brain.agents.notification.get_session") as mock_ctx,
-        patch(
-            "infra_brain.agents.notification.send_ops_alert", side_effect=send_side_effect
-        ),
+        patch("infra_brain.agents.notification.send_ops_alert", side_effect=send_side_effect),
     ):
         mock_ctx.return_value.__enter__ = lambda s: mock_session
         mock_ctx.return_value.__exit__ = MagicMock(return_value=False)

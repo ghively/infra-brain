@@ -87,7 +87,6 @@ from infra_brain.db.models import (
 )
 
 
-
 from tests.support.pg import make_engine
 
 

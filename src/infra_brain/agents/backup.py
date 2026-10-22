@@ -197,4 +197,6 @@ class BackupAgent(BaseAgent):
             # column tracks "last confirmed by a poll", not just "first seen".
             "collected_at": datetime.now(UTC),
         }
-        self._upsert_detail(session, BackupJob, row, key_fields=["resource_id", "backend", "job_name"])
+        self._upsert_detail(
+            session, BackupJob, row, key_fields=["resource_id", "backend", "job_name"]
+        )

@@ -441,7 +441,10 @@ def test_issued_by_is_copied_endpoint_for_endpoint():
 
     (edge,) = plan.edges
     assert edge.source_identity == ("Certificate", "E1375F2F")
-    assert edge.target_identity == ("CertificateAuthority", "CN = vmi-example-runner.contaboserver.net")
+    assert edge.target_identity == (
+        "CertificateAuthority",
+        "CN = vmi-example-runner.contaboserver.net",
+    )
     assert "reanchored" not in edge.evidence
     assert edge.source == "p4_backfill:PKIAgent"
 
@@ -649,7 +652,9 @@ def test_the_planner_is_deterministic_under_row_reordering():
     """Same rows, any order, same plan — a migration must not depend on scan order."""
     inv_file = inventory_file()
     a = legacy("a", "ANSIBLE_MANAGES", project(), host(), created_at=T_OLD)
-    b = legacy("b", "ANSIBLE_MANAGES", project(), host(rid="r-h2", name="ai_node"), created_at=T_NEW)
+    b = legacy(
+        "b", "ANSIBLE_MANAGES", project(), host(rid="r-h2", name="ai_node"), created_at=T_NEW
+    )
     kwargs = dict(
         project_ids={"r-proj-new": PROJECT_ID},
         inv=witnesses({"node_a": [inv_file], "ai_node": [inv_file]}),

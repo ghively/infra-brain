@@ -1205,9 +1205,7 @@ def _collect_across_vcenters(s, collect_fn, label: str) -> list[dict]:
             logger.warning("vSphere %s collection failed for %s: %s", label, host, exc)
             errors.append(f"{host}: {exc}")
     if errors and not result:
-        raise ToolException(
-            f"vSphere {label} collection failed: {'; '.join(errors)}"
-        )
+        raise ToolException(f"vSphere {label} collection failed: {'; '.join(errors)}")
     return result
 
 

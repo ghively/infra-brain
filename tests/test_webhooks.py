@@ -725,7 +725,9 @@ def test_incident_ack_updates_matching_drift_event_and_compliance_violation(
     mock_session.commit.assert_called_once()
 
 
-def test_incident_ack_resolve_action_sets_resolved_status(client, monkeypatch, clear_settings_cache):
+def test_incident_ack_resolve_action_sets_resolved_status(
+    client, monkeypatch, clear_settings_cache
+):
     monkeypatch.setenv("WEBHOOK_INCIDENT_SECRET", "incident-secret")
     get_settings.cache_clear()
 
@@ -758,7 +760,9 @@ def test_incident_ack_resolve_action_sets_resolved_status(client, monkeypatch, c
     assert mock_violation.status == "resolved"
 
 
-def test_incident_ack_allows_when_secret_unset_in_dev_mode(client, monkeypatch, clear_settings_cache):
+def test_incident_ack_allows_when_secret_unset_in_dev_mode(
+    client, monkeypatch, clear_settings_cache
+):
     monkeypatch.setenv("WEBHOOK_INCIDENT_SECRET", "")
     monkeypatch.setenv("INFRA_BRAIN_DEV", "1")
     monkeypatch.setenv("WEBHOOK_AUTH_REQUIRED", "false")
@@ -951,9 +955,7 @@ def test_approve_integration_requires_pending_status(monkeypatch):
         patch("infra_brain.webhooks.get_session", get_session_cm),
         patch("infra_brain.agents.coverage.CoverageAgent", return_value=mock_coverage_agent),
     ):
-        resp = client.post(
-            f"/integrations/{proposal_id}/approve", json={"approved_by": "tester"}
-        )
+        resp = client.post(f"/integrations/{proposal_id}/approve", json={"approved_by": "tester"})
 
     assert resp.status_code == 409
     mock_coverage_agent.wire.assert_not_called()
@@ -992,9 +994,7 @@ def test_approve_integration_wires_on_success(monkeypatch):
         patch("infra_brain.webhooks.get_session", get_session_cm),
         patch("infra_brain.agents.coverage.CoverageAgent", return_value=mock_coverage_agent),
     ):
-        resp = client.post(
-            f"/integrations/{proposal_id}/approve", json={"approved_by": "tester"}
-        )
+        resp = client.post(f"/integrations/{proposal_id}/approve", json={"approved_by": "tester"})
 
     assert resp.status_code == 200
     mock_coverage_agent.wire.assert_called_once_with(proposal_id)
@@ -1032,9 +1032,7 @@ def test_approve_integration_reverts_to_pending_when_wire_fails(monkeypatch):
         patch("infra_brain.webhooks.get_session", get_session_cm),
         patch("infra_brain.agents.coverage.CoverageAgent", return_value=mock_coverage_agent),
     ):
-        resp = client.post(
-            f"/integrations/{proposal_id}/approve", json={"approved_by": "tester"}
-        )
+        resp = client.post(f"/integrations/{proposal_id}/approve", json={"approved_by": "tester"})
 
     assert resp.status_code == 500
     with Session(engine) as s:

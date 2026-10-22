@@ -256,7 +256,6 @@ def empty_db():
 
     from sqlalchemy.orm import Session
 
-
     eng = make_engine()
 
     @contextlib.contextmanager

@@ -378,9 +378,7 @@ def _fixed_vector(seed: float, dim: int = 1024) -> list[float]:
     return v
 
 
-def test_search_knowledge_fences_personal_wiki_by_default_and_opts_in(
-    real_pg_engine, monkeypatch
-):
+def test_search_knowledge_fences_personal_wiki_by_default_and_opts_in(real_pg_engine, monkeypatch):
     """(a) a seeded personal-wiki document is NOT returned by a default
     search_knowledge call even though its content is an exact cosine match for
     the query; (b) it IS returned when the caller passes
@@ -456,9 +454,7 @@ def test_search_knowledge_fences_personal_wiki_by_default_and_opts_in(
         assert infra_title in default_titles  # infra content surfaces normally
         assert personal_title not in default_titles  # (a) fenced by default
 
-        opted_in_hits = search_knowledge(
-            f"fencing regression test {marker}", include_personal=True
-        )
+        opted_in_hits = search_knowledge(f"fencing regression test {marker}", include_personal=True)
         opted_in_titles = {h["title"] for h in opted_in_hits}
         assert infra_title in opted_in_titles
         assert personal_title in opted_in_titles  # (b) explicit opt-in includes it

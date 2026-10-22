@@ -47,7 +47,10 @@ def test_create_gitlab_issue_success():
     assert result == {"issue_iid": 7, "web_url": "https://x/issues/7"}
     mock_call.assert_called_once_with(
         "create_gitlab_issue",
-        project_id=42, title="Drift detected", description="details", labels=None,
+        project_id=42,
+        title="Drift detected",
+        description="details",
+        labels=None,
     )
 
 
@@ -55,9 +58,7 @@ def test_create_gitlab_issue_failure_propagates_not_swallowed():
     mock_call = AsyncMock(side_effect=HeadlessRunnerMcpError("key_lacks_scope"))
     with patch("infra_brain.runner.tools.call_mcp_tool", mock_call):
         with pytest.raises(HeadlessRunnerMcpError, match="key_lacks_scope"):
-            asyncio.run(
-                runner_create_gitlab_issue.ainvoke({"project_id": 42, "title": "x"})
-            )
+            asyncio.run(runner_create_gitlab_issue.ainvoke({"project_id": 42, "title": "x"}))
 
 
 def test_create_gitlab_issue_args_schema_requires_int_project_id():
@@ -76,9 +77,7 @@ def test_create_gitlab_issue_rejects_missing_or_zero_project_id():
     must fail closed with a clear error and never call the MCP client."""
     mock_call = AsyncMock()
     with patch("infra_brain.runner.tools.call_mcp_tool", mock_call):
-        result = asyncio.run(
-            runner_create_gitlab_issue.ainvoke({"project_id": 0, "title": "x"})
-        )
+        result = asyncio.run(runner_create_gitlab_issue.ainvoke({"project_id": 0, "title": "x"}))
     assert "error" in result
     mock_call.assert_not_called()
 
@@ -94,7 +93,9 @@ def test_record_governance_event_uses_fixed_client_id():
     assert result == {"id": "g1", "hash": "abc"}
     mock_call.assert_called_once_with(
         "record_governance_event",
-        client_id="headless-runner", event_type="drift-triage-run", payload={"findings": 2},
+        client_id="headless-runner",
+        event_type="drift-triage-run",
+        payload={"findings": 2},
     )
 
 
@@ -116,13 +117,15 @@ def test_record_client_state_uses_fixed_client_id():
     mock_call = AsyncMock(return_value={"id": "cs1"})
     with patch("infra_brain.runner.tools.call_mcp_tool", mock_call):
         result = asyncio.run(
-            runner_record_client_state.ainvoke(
-                {"collection": "x", "entry_id": "e1", "payload": {}}
-            )
+            runner_record_client_state.ainvoke({"collection": "x", "entry_id": "e1", "payload": {}})
         )
     assert result == {"id": "cs1"}
     mock_call.assert_called_once_with(
-        "record_client_state", collection="x", entry_id="e1", payload={}, client_id="headless-runner"
+        "record_client_state",
+        collection="x",
+        entry_id="e1",
+        payload={},
+        client_id="headless-runner",
     )
 
 
@@ -148,8 +151,13 @@ def test_propose_instinct_uses_fixed_proposer_label():
     assert result == {"proposed": "p1", "status": "pending"}
     mock_call.assert_called_once_with(
         "propose_instinct",
-        zone="corpor", domain="linux", pattern="x", confidence=0.8,
-        evidence="", citation="", proposer_label="headless-runner",
+        zone="corpor",
+        domain="linux",
+        pattern="x",
+        confidence=0.8,
+        evidence="",
+        citation="",
+        proposer_label="headless-runner",
     )
 
 

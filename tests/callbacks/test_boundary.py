@@ -291,9 +291,7 @@ def test_guarded_tools_node_async_path_scans_output_for_dlp(_enforcing_no_db):
         return "card 4111111111111111"
 
     graph = _async_tools_graph(leaky_tool)
-    ai = AIMessage(
-        content="", tool_calls=[{"name": "leaky_tool", "args": {"q": "x"}, "id": "c1"}]
-    )
+    ai = AIMessage(content="", tool_calls=[{"name": "leaky_tool", "args": {"q": "x"}, "id": "c1"}])
     out = asyncio.run(graph.ainvoke({"messages": [ai]}))
     assert "BLOCKED by read-only boundary gate" in out["messages"][-1].content
 
@@ -332,9 +330,7 @@ def test_guarded_tools_node_async_path_writes_audit_log(_enforcing_no_db, monkey
         tool_calls=[{"name": "async_probe", "args": {"payload": "x"}, "id": "c1"}],
     )
     audit_handler = AuditCallbackHandler(agent_name="chat", domain="chat")
-    out = asyncio.run(
-        graph.ainvoke({"messages": [ai]}, config={"callbacks": [audit_handler]})
-    )
+    out = asyncio.run(graph.ainvoke({"messages": [ai]}, config={"callbacks": [audit_handler]}))
     assert out["messages"][-1].content == "ok"
     action_logs = [r for r in added if isinstance(r, AgentActionLog)]
     assert action_logs, "AgentActionLog row was not written for the async tool call"
@@ -372,9 +368,7 @@ def test_guarded_tools_node_async_path_handles_unknown_tool(_enforcing_no_db):
         return "ok"
 
     graph = _async_tools_graph(async_probe)
-    ai = AIMessage(
-        content="", tool_calls=[{"name": "nope", "args": {}, "id": "c1"}]
-    )
+    ai = AIMessage(content="", tool_calls=[{"name": "nope", "args": {}, "id": "c1"}])
     out = asyncio.run(graph.ainvoke({"messages": [ai]}))
     assert out["messages"][-1].content == "unknown tool: nope"
 

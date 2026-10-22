@@ -167,7 +167,10 @@ class TestGetGovernanceEvents:
         governance_events.record_governance_event(
             client_id="client-a", event_type="event_one", payload={}
         )
-        assert governance_events.get_governance_events(since_id="00000000-0000-0000-0000-000000000000") == []
+        assert (
+            governance_events.get_governance_events(since_id="00000000-0000-0000-0000-000000000000")
+            == []
+        )
 
     def test_since_id_malformed_returns_empty(self, session_ctx):
         governance_events.record_governance_event(
@@ -210,9 +213,7 @@ class TestVerifyGovernanceChain:
         assert result["broken_at"] is None
         assert result["checked"] == 3
 
-    def test_verify_detects_tampered_row_and_reports_correct_broken_at(
-        self, session_ctx, engine
-    ):
+    def test_verify_detects_tampered_row_and_reports_correct_broken_at(self, session_ctx, engine):
         governance_events.record_governance_event(
             client_id="infra-ops-1", event_type="event_one", payload={"n": 1}
         )

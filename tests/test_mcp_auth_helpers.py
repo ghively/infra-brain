@@ -1,4 +1,5 @@
 """mcp_auth: token hashing/generation and key CRUD helpers."""
+
 import hashlib
 import uuid
 from datetime import UTC, datetime, timedelta

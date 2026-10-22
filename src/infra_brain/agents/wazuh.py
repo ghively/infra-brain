@@ -248,9 +248,7 @@ class WazuhAgent(ETLConnector):
         if isinstance(payload, dict):
             hits = payload.get("hits")
             if isinstance(hits, dict) and isinstance(hits.get("hits"), list):
-                return [
-                    (h.get("_source") or {}) for h in hits["hits"] if isinstance(h, dict)
-                ]
+                return [(h.get("_source") or {}) for h in hits["hits"] if isinstance(h, dict)]
             data = payload.get("data")
             if isinstance(data, dict):
                 return data.get("affected_items", []) or []
